@@ -32,13 +32,7 @@ CPMAddPackage(
     SOURCE_DIR ${LIB_DIR}/juce
 )
 
-# # Define your JUCE plugin
-# juce_add_plugin(AudioPluginStarter
-#     PLUGIN_MANUFACTURER "YourCompany"
-#     PLUGIN_CODE "Demo"
-#     FORMATS VST3 AU Standalone
-#     SOURCES src/PluginProcessor.cpp src/PluginEditor.cpp
-# )
+
 
 # Default build type
 if(NOT CMAKE_BUILD_TYPE)
