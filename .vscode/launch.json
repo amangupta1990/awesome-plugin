@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug JUCE Plugin",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "/Applications/REAPER64.app/Contents/MacOS/REAPER", // Replace with the plugin host executable
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": true,
+      "MIMode": "lldb", // Use "gdb" for Linux or MinGW, "lldb" for macOS
+      "setupCommands": [{ "text": "-enable-pretty-printing" }]
+    }
+  ]
+}

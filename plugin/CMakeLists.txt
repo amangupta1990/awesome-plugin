@@ -20,13 +20,14 @@ target_sources(${PROJECT_NAME}
         Source/PluginProcessor.cpp
 )
 
-target_include_directories(${PROJECT_NAME}
-    PRIVATE
-        headers/myPlugin
+target_include_directories(AudioPlugin PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source
+    ${CMAKE_CURRENT_SOURCE_DIR}/headers/myPlugin
 )
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
+        juce::juce_gui_basics
         juce::juce_audio_basics
         juce::juce_audio_devices
         juce::juce_audio_formats
