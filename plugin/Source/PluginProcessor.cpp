@@ -12,6 +12,7 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
                      #endif
                        )
 {
+    midiVolume = 1.0f;
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
@@ -148,7 +149,10 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto* channelData = buffer.getWritePointer (channel);
-        juce::ignoreUnused (channelData);
+        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+        {
+            channelData[sample] *= midiVolume;
+        }
         // ..do something to the data...
     }
 }
@@ -178,6 +182,10 @@ void AudioPluginAudioProcessor::setStateInformation (const void* data, int sizeI
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
     juce::ignoreUnused (data, sizeInBytes);
+}
+
+void AudioPluginAudioProcessor::setMidiVolume(float volume){
+    midiVolume = volume;
 }
 
 //==============================================================================

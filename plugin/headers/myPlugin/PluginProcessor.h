@@ -47,7 +47,7 @@ public:
 
 
 private:
-    float noteOnVelocity = 0.0f;
+    float midiVolume = 1.0f;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)
 };
