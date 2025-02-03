@@ -1,4 +1,3 @@
-// filepath: /Users/amangupta/projects/awesome-plugin/plugin/Source/MainComponent.h
 #pragma once
 
 #include <JuceHeader.h>
@@ -9,9 +8,14 @@ public:
     MainComponent();
     ~MainComponent() override;
 
-    void paint(juce::Graphics &) override;
+    void paint(juce::Graphics &g) override;
     void resized() override;
 
 private:
+    void populateVSTComboBox();
+    void vstSelected();
+
+    juce::ComboBox vstComboBox;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

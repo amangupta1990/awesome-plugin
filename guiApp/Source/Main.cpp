@@ -1,4 +1,3 @@
-// filepath: /Users/amangupta/projects/awesome-plugin/plugin/Source/Main.cpp
 #include <JuceHeader.h>
 #include "MainComponent.h"
 
