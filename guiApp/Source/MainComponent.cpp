@@ -1,7 +1,10 @@
 #include "MainComponent.h"
+#include <juce_audio_processors/juce_audio_processors.h>
 
 MainComponent::MainComponent()
 {
+    DBG("MainComponent Constructor");
+
     setSize(800, 600);
 
     // Add the ComboBox to the component
@@ -9,11 +12,19 @@ MainComponent::MainComponent()
     vstComboBox.onChange = [this]
     { vstSelected(); };
 
+    // Initialize the format manager and add the default formats (including VST)
+    formatManager.addDefaultFormats();
+    DBG("Format Manager Initialized");
+
     // Populate the ComboBox with VST plugins
     populateVSTComboBox();
+    DBG("VST ComboBox Populated");
 }
 
-MainComponent::~MainComponent() {}
+MainComponent::~MainComponent()
+{
+    DBG("MainComponent Destructor");
+}
 
 void MainComponent::paint(juce::Graphics &g)
 {
@@ -31,11 +42,60 @@ void MainComponent::resized()
 
 void MainComponent::populateVSTComboBox()
 {
-    // Scan for VST plugins and add them to the ComboBox
-    // This is a placeholder implementation
-    vstComboBox.addItem("VST Plugin 1", 1);
-    vstComboBox.addItem("VST Plugin 2", 2);
-    vstComboBox.addItem("VST Plugin 3", 3);
+    DBG("Populating VST ComboBox");
+
+    // Request user to select directories for VST plugins
+    juce::FileChooser chooser("Select VST Plugin Directories",
+                              juce::File::getSpecialLocation(juce::File::userHomeDirectory),
+                              "*",
+                              true);
+
+    if (chooser.browseForMultipleDirectories())
+    {
+        juce::FileSearchPath searchPath;
+        auto results = chooser.getResults();
+        for (auto &result : results)
+        {
+            searchPath.add(result.getFullPathName());
+            DBG("Selected Directory: " + result.getFullPathName());
+        }
+
+        juce::File deadMansPedalFile; // You can specify a file path if needed
+        DBG("Dead Man's Pedal File: " + deadMansPedalFile.getFullPathName());
+
+        auto *format = formatManager.getFormat(0);
+        if (format == nullptr)
+        {
+            DBG("No format found");
+            return;
+        }
+        DBG("Format found: " + format->getName());
+
+        juce::PluginDirectoryScanner scanner(pluginList, *format, searchPath, true, deadMansPedalFile);
+        DBG("Plugin Directory Scanner Initialized");
+
+        juce::String pluginName;
+        while (scanner.scanNextFile(true, pluginName))
+        {
+            DBG("Scanning plugin: " + pluginName);
+            auto pluginDescription = pluginList.getTypeForFile(pluginName);
+            if (pluginDescription != nullptr)
+            {
+                vstComboBox.addItem(pluginDescription->name, vstComboBox.getNumItems() + 1);
+                DBG("Added plugin: " + pluginDescription->name);
+            }
+            else
+            {
+                DBG("No plugin description found for: " + pluginName);
+            }
+        }
+
+        DBG("VST ComboBox Population Complete");
+    }
+    else
+    {
+        DBG("No directories selected");
+    }
 }
 
 void MainComponent::vstSelected()
