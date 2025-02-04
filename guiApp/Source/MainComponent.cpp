@@ -44,58 +44,56 @@ void MainComponent::populateVSTComboBox()
 {
     DBG("Populating VST ComboBox");
 
-    // Request user to select directories for VST plugins
-    juce::FileChooser chooser("Select VST Plugin Directories",
-                              juce::File::getSpecialLocation(juce::File::userHomeDirectory),
-                              "*",
-                              true);
+    // Scan for VST plugins and add them to the ComboBox
+    juce::FileSearchPath searchPath;
+    searchPath.add(juce::File("/Library/Audio/Plug-Ins/VST").getFullPathName());
+    searchPath.add(juce::File("/Library/Audio/Plug-Ins/VST3").getFullPathName());
+    searchPath.add(juce::File("~/Library/Audio/Plug-Ins/VST").getFullPathName());
+    searchPath.add(juce::File("~/Library/Audio/Plug-Ins/VST3").getFullPathName());
+    searchPath.add(juce::File("/Users/amangupta/projects/juce_cmake/build/plugin/AudioPlugin_artefacts/Release/VST3").getFullPathName());
+    DBG("Search Path: " + searchPath.toString());
 
-    if (chooser.browseForMultipleDirectories())
+    if (!juce::File("/Library/Audio/Plug-Ins/VST").exists() &&
+        !juce::File("/Library/Audio/Plug-Ins/VST3").exists() &&
+        !juce::File("~/Library/Audio/Plug-Ins/VST").exists() &&
+        !juce::File("~/Library/Audio/Plug-Ins/VST3").exists() &&
+        !juce::File("/Users/amangupta/projects/juce_cmake/build/plugin/AudioPlugin_artefacts/Release/VST3").exists())
     {
-        juce::FileSearchPath searchPath;
-        auto results = chooser.getResults();
-        for (auto &result : results)
-        {
-            searchPath.add(result.getFullPathName());
-            DBG("Selected Directory: " + result.getFullPathName());
-        }
-
-        juce::File deadMansPedalFile; // You can specify a file path if needed
-        DBG("Dead Man's Pedal File: " + deadMansPedalFile.getFullPathName());
-
-        auto *format = formatManager.getFormat(0);
-        if (format == nullptr)
-        {
-            DBG("No format found");
-            return;
-        }
-        DBG("Format found: " + format->getName());
-
-        juce::PluginDirectoryScanner scanner(pluginList, *format, searchPath, true, deadMansPedalFile);
-        DBG("Plugin Directory Scanner Initialized");
-
-        juce::String pluginName;
-        while (scanner.scanNextFile(true, pluginName))
-        {
-            DBG("Scanning plugin: " + pluginName);
-            auto pluginDescription = pluginList.getTypeForFile(pluginName);
-            if (pluginDescription != nullptr)
-            {
-                vstComboBox.addItem(pluginDescription->name, vstComboBox.getNumItems() + 1);
-                DBG("Added plugin: " + pluginDescription->name);
-            }
-            else
-            {
-                DBG("No plugin description found for: " + pluginName);
-            }
-        }
-
-        DBG("VST ComboBox Population Complete");
+        DBG("Default VST directories do not exist or cannot be accessed");
+        return;
     }
-    else
+
+    juce::File deadMansPedalFile; // You can specify a file path if needed
+    DBG("Dead Man's Pedal File: " + deadMansPedalFile.getFullPathName());
+
+    auto *format = formatManager.getFormat(0);
+    if (format == nullptr)
     {
-        DBG("No directories selected");
+        DBG("No format found");
+        return;
     }
+    DBG("Format found: " + format->getName());
+
+    juce::PluginDirectoryScanner scanner(pluginList, *format, searchPath, true, deadMansPedalFile);
+    DBG("Plugin Directory Scanner Initialized");
+
+    juce::String pluginName;
+    while (scanner.scanNextFile(true, pluginName))
+    {
+        DBG("Scanning plugin: " + pluginName);
+        auto pluginDescription = pluginList.getTypeForFile(pluginName);
+        if (pluginDescription != nullptr)
+        {
+            vstComboBox.addItem(pluginDescription->name, vstComboBox.getNumItems() + 1);
+            DBG("Added plugin: " + pluginDescription->name);
+        }
+        else
+        {
+            DBG("No plugin description found for: " + pluginName);
+        }
+    }
+
+    DBG("VST ComboBox Population Complete");
 }
 
 void MainComponent::vstSelected()
