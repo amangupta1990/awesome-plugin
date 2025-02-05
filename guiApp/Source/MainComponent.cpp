@@ -64,7 +64,7 @@ void MainComponent::scanForPlugins()
     searchPath.add(juce::File("~/Library/Audio/Plug-Ins/VST").getFullPathName());
     searchPath.add(juce::File("~/Library/Audio/Plug-Ins/VST3").getFullPathName());
 
-    std::cout << "Search paths added" << std::endl;
+    std::cout << "Search paths added: " << searchPath.toString() << std::endl;
 
     // Use the format manager to get the formats
     for (int i = 0; i < formatManager.getNumFormats(); ++i)
@@ -73,19 +73,24 @@ void MainComponent::scanForPlugins()
         std::cout << "Searching for plugins with format: " << format->getName() << std::endl;
 
         juce::StringArray foundPlugins = format->searchPathsForPlugins(searchPath, true, false);
-        for (const auto &pluginPath : foundPlugins)
+        std::cout << "Found " << foundPlugins.size() << " plugins for format: " << format->getName() << std::endl;
+
+        if (foundPlugins.size() == 0)
         {
-            auto pluginDescription = pluginList.getTypeForFile(pluginPath);
-            if (pluginDescription != nullptr)
-            {
-                vstComboBox.addItem(pluginDescription->name, vstComboBox.getNumItems() + 1);
-                std::cout << "Added plugin: " << pluginDescription->name << std::endl;
-            }
-            else
-            {
-                std::cout << "No plugin description found for: " << pluginPath << std::endl;
-            }
+            std::cout << "No plugins found for format: " << format->getName() << std::endl;
         }
+
+        for (int j = 0; j < foundPlugins.size(); ++j)
+        {
+            juce::String pluginPath = foundPlugins[j];
+            std::cout << "Found plugin at path: " << pluginPath << std::endl;
+            juce::File pluginFile(pluginPath);
+            juce::String pluginName = pluginFile.getFileNameWithoutExtension();
+            std::cout << "Adding plugin: " << pluginName << std::endl;
+            std::cout << "plugin file: " << pluginFile.getFullPathName() << std::endl;
+            vstComboBox.addItem(pluginName, vstComboBox.getNumItems() + 1);
+        }
+        std::cout << "Finished processing format: " << format->getName() << std::endl;
     }
 
     std::cout << "Finished scanning for plugins" << std::endl;
