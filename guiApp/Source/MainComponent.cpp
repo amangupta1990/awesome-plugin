@@ -12,6 +12,7 @@ MainComponent::MainComponent()
 
     // Add the ComboBox to the component
     addAndMakeVisible(vstComboBox);
+    vstComboBox.addListener(this);
 
     // Manually add the plugin formats
     formatManager.addFormat(new juce::VST3PluginFormat());
@@ -31,6 +32,11 @@ MainComponent::MainComponent()
         }
     }
 
+    // Initialize the audio device manager
+    deviceManager.initialiseWithDefaultDevices(2, 2);
+    deviceManager.addAudioCallback(&audioProcessorPlayer);
+    audioProcessorPlayer.setProcessor(&audioGraph);
+
     // Scan for plugins
     scanForPlugins();
     std::cout << "Plugins Scanned" << std::endl;
@@ -39,6 +45,7 @@ MainComponent::MainComponent()
 MainComponent::~MainComponent()
 {
     std::cout << "MainComponent Destructor" << std::endl;
+    deviceManager.removeAudioCallback(&audioProcessorPlayer);
 }
 
 void MainComponent::paint(juce::Graphics &g)
@@ -52,6 +59,13 @@ void MainComponent::paint(juce::Graphics &g)
 void MainComponent::resized()
 {
     vstComboBox.setBounds(10, 10, getWidth() - 20, 30);
+
+    int labelY = 50;
+    for (auto *label : pluginLabels)
+    {
+        label->setBounds(10, labelY, getWidth() - 20, 30);
+        labelY += 40;
+    }
 }
 
 void MainComponent::scanForPlugins()
@@ -94,4 +108,46 @@ void MainComponent::scanForPlugins()
     }
 
     std::cout << "Finished scanning for plugins" << std::endl;
+}
+
+void MainComponent::comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged)
+{
+    if (comboBoxThatHasChanged == &vstComboBox)
+    {
+        juce::String selectedPlugin = vstComboBox.getText();
+        std::cout << "Selected plugin: " << selectedPlugin << std::endl;
+        addPluginToGraph(selectedPlugin);
+    }
+}
+
+void MainComponent::addPluginToGraph(const juce::String &pluginName)
+{
+    auto *format = formatManager.getFormat(0); // Assuming VST3 format for simplicity
+    auto pluginDescription = pluginList.getTypeForIdentifierString(pluginName);
+
+    if (pluginDescription != nullptr)
+    {
+        format->createPluginInstanceAsync(*pluginDescription, 44100.0, 512, [this, pluginName](std::unique_ptr<juce::AudioPluginInstance> instance, const juce::String &error)
+                                          {
+            if (instance != nullptr)
+            {
+                auto nodeId = audioGraph.addNode(std::move(instance))->nodeID;
+                std::cout << "Added plugin to graph with node ID: " << static_cast<int>(nodeId.uid) << std::endl;
+
+                // Update UI to show the added plugin
+                juce::Label* pluginLabel = new juce::Label();
+                pluginLabel->setText(pluginName, juce::dontSendNotification);
+                addAndMakeVisible(pluginLabel);
+                pluginLabels.add(pluginLabel);
+                resized(); // Update layout
+            }
+            else
+            {
+                std::cout << "Failed to create plugin instance: " << error << std::endl;
+            } });
+    }
+    else
+    {
+        std::cout << "No plugin description found for: " << pluginName << std::endl;
+    }
 }
