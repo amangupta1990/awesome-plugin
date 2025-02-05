@@ -1,7 +1,6 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include <juce_audio_processors/juce_audio_processors.h> // Add this line
 
 class MainComponent : public juce::Component
 {
@@ -13,8 +12,7 @@ public:
     void resized() override;
 
 private:
-    void populateVSTComboBox();
-    void vstSelected();
+    void scanForPlugins();
 
     juce::ComboBox vstComboBox;
     juce::AudioPluginFormatManager formatManager;
