@@ -23,6 +23,7 @@ target_sources(${PROJECT_NAME}
         Source/MainComponent.cpp
         Source/MainComponent.h
         Source/FileAccessHelper.mm
+        Source/Volumeter.h
 )
 
 target_include_directories(${PROJECT_NAME}

@@ -12,6 +12,9 @@ MainComponent::MainComponent()
     addAndMakeVisible(vstComboBox);
     vstComboBox.addListener(this);
 
+    // Add the VolumeMeter to the component
+    addAndMakeVisible(volumeMeter);
+
     // Manually add the plugin formats
     formatManager.addFormat(new juce::VST3PluginFormat());
     formatManager.addFormat(new juce::AudioUnitPluginFormat());
@@ -35,6 +38,21 @@ MainComponent::MainComponent()
     deviceManager.addAudioCallback(&audioProcessorPlayer);
     audioProcessorPlayer.setProcessor(&audioGraph);
 
+    // Add input and output nodes to the audio graph
+    auto inputNode = audioGraph.addNode(std::make_unique<juce::AudioProcessorGraph::AudioGraphIOProcessor>(juce::AudioProcessorGraph::AudioGraphIOProcessor::audioInputNode));
+    auto outputNode = audioGraph.addNode(std::make_unique<juce::AudioProcessorGraph::AudioGraphIOProcessor>(juce::AudioProcessorGraph::AudioGraphIOProcessor::audioOutputNode));
+
+    if (inputNode != nullptr && outputNode != nullptr)
+    {
+        std::cout << "Input and output nodes added to the audio graph" << std::endl;
+        audioGraph.addConnection({{inputNode->nodeID, juce::AudioProcessorGraph::AudioGraphIOProcessor::audioOutputNode}, {outputNode->nodeID, juce::AudioProcessorGraph::AudioGraphIOProcessor::audioInputNode}});
+        std::cout << "Connection between input and output nodes established" << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed to add input or output nodes to the audio graph" << std::endl;
+    }
+
     // Start the plugin scanning thread
     startThread();
 }
@@ -57,8 +75,9 @@ void MainComponent::paint(juce::Graphics &g)
 void MainComponent::resized()
 {
     vstComboBox.setBounds(10, 10, getWidth() - 20, 30);
+    volumeMeter.setBounds(10, 50, getWidth() - 20, 30);
 
-    int labelY = 50;
+    int labelY = 90;
     for (auto *label : pluginLabels)
     {
         label->setBounds(10, labelY, getWidth() - 20, 30);
@@ -106,7 +125,7 @@ void MainComponent::scanForPlugins()
             pluginDescription.fileOrIdentifier = pluginPath;
             pluginDescription.name = pluginName;
             pluginDescription.pluginFormatName = format->getName();
-            pluginMap[pluginName] = pluginDescription;
+            pluginMap.set(pluginName, pluginDescription);
 
             vstComboBox.addItem(pluginName, vstComboBox.getNumItems() + 1);
         }
@@ -130,10 +149,9 @@ void MainComponent::comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged)
 void MainComponent::addPluginToGraph(const juce::String &pluginName)
 {
     std::cout << "Adding plugin to graph: " << pluginName << std::endl;
-    auto it = pluginMap.find(pluginName);
-    if (it != pluginMap.end())
+    if (pluginMap.contains(pluginName))
     {
-        const juce::PluginDescription &pluginDescription = it->second;
+        const juce::PluginDescription &pluginDescription = pluginMap[pluginName];
         std::cout << "Plugin description found for: " << pluginName << std::endl;
 
         // Get the format based on the plugin description
@@ -179,6 +197,7 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
         std::cout << "No plugin description found for: " << pluginName << std::endl;
     }
 }
+
 void MainComponent::run()
 {
     scanForPlugins();

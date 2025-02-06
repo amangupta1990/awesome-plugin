@@ -1,14 +1,11 @@
 #pragma once
 
-#include <juce_gui_basics/juce_gui_basics.h>
-#include <juce_audio_processors/juce_audio_processors.h>
-#include <juce_audio_plugin_client/juce_audio_plugin_client.h>
-#include <juce_audio_utils/juce_audio_utils.h>
-#include <unordered_map>
+#include <JuceHeader.h>
+#include "Volumeter.h"
 
 class MainComponent : public juce::Component,
-                      private juce::ComboBox::Listener,
-                      private juce::Thread
+                      public juce::ComboBox::Listener,
+                      public juce::Thread
 {
 public:
     MainComponent();
@@ -16,22 +13,22 @@ public:
 
     void paint(juce::Graphics &g) override;
     void resized() override;
+    void comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged) override;
+    void run() override;
 
 private:
-    void comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged) override;
     void scanForPlugins();
     void addPluginToGraph(const juce::String &pluginName);
-    void run() override;
 
     juce::ComboBox vstComboBox;
     juce::AudioDeviceManager deviceManager;
     juce::AudioProcessorPlayer audioProcessorPlayer;
     juce::AudioProcessorGraph audioGraph;
-    juce::AudioPluginFormatManager formatManager;
     juce::KnownPluginList pluginList;
+    juce::AudioPluginFormatManager formatManager;
+    juce::HashMap<juce::String, juce::PluginDescription> pluginMap;
     juce::OwnedArray<juce::Label> pluginLabels;
-
-    std::unordered_map<juce::String, juce::PluginDescription> pluginMap; // Hash map to store plugin descriptions
+    VolumeMeter volumeMeter; // Declare volumeMeter
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };
