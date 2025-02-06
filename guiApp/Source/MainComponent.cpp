@@ -1,4 +1,5 @@
 #include "MainComponent.h"
+#include "PluginEditorComponent.h"
 #include <iostream>
 
 MainComponent::MainComponent()
@@ -82,6 +83,11 @@ void MainComponent::resized()
     {
         label->setBounds(10, labelY, getWidth() - 20, 30);
         labelY += 40;
+    }
+
+    if (pluginEditorComponent != nullptr)
+    {
+        pluginEditorComponent->setBounds(10, labelY, getWidth() - 20, getHeight() - labelY - 10);
     }
 }
 
@@ -175,12 +181,15 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
                     auto nodeId = audioGraph.addNode(std::move(instance))->nodeID;
                     std::cout << "Added plugin to graph with node ID: " << static_cast<int>(nodeId.uid) << std::endl;
 
-                    // Update UI to show the added plugin
-                    juce::Label* pluginLabel = new juce::Label();
-                    pluginLabel->setText(pluginName, juce::dontSendNotification);
-                    addAndMakeVisible(pluginLabel);
-                    pluginLabels.add(pluginLabel);
-                    resized(); // Update layout
+                    // Create and add the plugin editor component
+                    auto* pluginInstance = audioGraph.getNodeForId(nodeId)->getProcessor();
+                    auto editor = pluginInstance->createEditorIfNeeded();
+                    if (editor != nullptr)
+                    {
+                        pluginEditorComponent.reset(new PluginEditorComponent(std::unique_ptr<juce::AudioProcessorEditor>(editor)));
+                        addAndMakeVisible(pluginEditorComponent.get());
+                        resized(); // Update layout
+                    }
                 }
                 else
                 {

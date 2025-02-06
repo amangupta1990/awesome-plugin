@@ -1,7 +1,8 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "Volumeter.h"
+#include "VolumeMeter.h"
+#include "PluginEditorComponent.h"
 
 class MainComponent : public juce::Component,
                       public juce::ComboBox::Listener,
@@ -28,7 +29,8 @@ private:
     juce::AudioPluginFormatManager formatManager;
     juce::HashMap<juce::String, juce::PluginDescription> pluginMap;
     juce::OwnedArray<juce::Label> pluginLabels;
-    VolumeMeter volumeMeter; // Declare volumeMeter
+    VolumeMeter volumeMeter;
+    std::unique_ptr<PluginEditorComponent> pluginEditorComponent; // Add this member
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };
