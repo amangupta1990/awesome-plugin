@@ -85,8 +85,8 @@ void MainComponent::resized()
     int x = 0;
     for (auto *editor : pluginEditorComponents)
     {
-        editor->setBounds(x, 0, 200, 200); // Set smaller dimensions for the plugin editors
-        x += 210;                          // Add some spacing between editors
+        editor->setBounds(x, 0, 300, 200); // Set wider dimensions for the plugin editors
+        x += 310;                          // Add some spacing between editors
     }
 
     pluginContainer.setSize(x, 200); // Update the container size
@@ -118,6 +118,9 @@ void MainComponent::scanForPlugins()
             std::cout << "No plugins found for format: " << format->getName() << std::endl;
         }
 
+        // Add section heading for the format
+        vstComboBox.addSectionHeading(format->getName());
+
         for (int j = 0; j < foundPlugins.size(); ++j)
         {
             juce::String pluginPath = foundPlugins[j];
@@ -130,11 +133,12 @@ void MainComponent::scanForPlugins()
             // Add plugin to the hash map
             juce::PluginDescription pluginDescription;
             pluginDescription.fileOrIdentifier = pluginPath;
-            pluginDescription.name = pluginName;
+            pluginDescription.name = pluginDescription.descriptiveName.isNotEmpty() ? pluginDescription.descriptiveName : pluginName;
             pluginDescription.pluginFormatName = format->getName();
             pluginMap.set(pluginName, pluginDescription);
 
-            vstComboBox.addItem(pluginName, vstComboBox.getNumItems() + 1);
+            // Add plugin to ComboBox
+            vstComboBox.addItem(pluginDescription.name, vstComboBox.getNumItems() + 1);
         }
         std::cout << "Finished processing format: " << format->getName() << std::endl;
     }
