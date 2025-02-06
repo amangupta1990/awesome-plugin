@@ -1,5 +1,4 @@
 #include "MainComponent.h"
-#include "PluginEditorComponent.h"
 #include <iostream>
 
 MainComponent::MainComponent()
@@ -15,6 +14,10 @@ MainComponent::MainComponent()
 
     // Add the VolumeMeter to the component
     addAndMakeVisible(volumeMeter);
+
+    // Add the plugin viewport and container
+    addAndMakeVisible(pluginViewport);
+    pluginViewport.setViewedComponent(&pluginContainer, false);
 
     // Manually add the plugin formats
     formatManager.addFormat(new juce::VST3PluginFormat());
@@ -77,18 +80,16 @@ void MainComponent::resized()
 {
     vstComboBox.setBounds(10, 10, getWidth() - 20, 30);
     volumeMeter.setBounds(10, 50, getWidth() - 20, 30);
+    pluginViewport.setBounds(10, 90, getWidth() - 20, getHeight() - 100);
 
-    int labelY = 90;
-    for (auto *label : pluginLabels)
+    int x = 0;
+    for (auto *editor : pluginEditorComponents)
     {
-        label->setBounds(10, labelY, getWidth() - 20, 30);
-        labelY += 40;
+        editor->setBounds(x, 0, 200, 200); // Set smaller dimensions for the plugin editors
+        x += 210;                          // Add some spacing between editors
     }
 
-    if (pluginEditorComponent != nullptr)
-    {
-        pluginEditorComponent->setBounds(10, labelY, getWidth() - 20, getHeight() - labelY - 10);
-    }
+    pluginContainer.setSize(x, 200); // Update the container size
 }
 
 void MainComponent::scanForPlugins()
@@ -186,8 +187,9 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
                     auto editor = pluginInstance->createEditorIfNeeded();
                     if (editor != nullptr)
                     {
-                        pluginEditorComponent.reset(new PluginEditorComponent(std::unique_ptr<juce::AudioProcessorEditor>(editor)));
-                        addAndMakeVisible(pluginEditorComponent.get());
+                        auto* editorComponent = new PluginEditorComponent(std::unique_ptr<juce::AudioProcessorEditor>(editor), [this, nodeId] { removePluginFromGraph(nodeId); });
+                        pluginEditorComponents.add(editorComponent);
+                        pluginContainer.addAndMakeVisible(editorComponent);
                         resized(); // Update layout
                     }
                 }
@@ -205,6 +207,20 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
     {
         std::cout << "No plugin description found for: " << pluginName << std::endl;
     }
+}
+
+void MainComponent::removePluginFromGraph(juce::AudioProcessorGraph::NodeID nodeId)
+{
+    audioGraph.removeNode(nodeId);
+    for (int i = 0; i < pluginEditorComponents.size(); ++i)
+    {
+        if (pluginEditorComponents[i]->getBounds().contains(pluginEditorComponents[i]->getBounds().getCentre()))
+        {
+            pluginEditorComponents.remove(i);
+            break;
+        }
+    }
+    resized(); // Update layout
 }
 
 void MainComponent::run()

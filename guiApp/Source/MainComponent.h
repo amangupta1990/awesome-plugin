@@ -20,6 +20,7 @@ public:
 private:
     void scanForPlugins();
     void addPluginToGraph(const juce::String &pluginName);
+    void removePluginFromGraph(juce::AudioProcessorGraph::NodeID nodeId);
 
     juce::ComboBox vstComboBox;
     juce::AudioDeviceManager deviceManager;
@@ -30,7 +31,9 @@ private:
     juce::HashMap<juce::String, juce::PluginDescription> pluginMap;
     juce::OwnedArray<juce::Label> pluginLabels;
     VolumeMeter volumeMeter;
-    std::unique_ptr<PluginEditorComponent> pluginEditorComponent; // Add this member
+    juce::OwnedArray<PluginEditorComponent> pluginEditorComponents; // Store multiple plugin editors
+    juce::Viewport pluginViewport;                                  // Add a viewport for horizontal scrolling
+    juce::Component pluginContainer;                                // Container for plugin editors
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };
