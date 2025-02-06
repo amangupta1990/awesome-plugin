@@ -105,6 +105,7 @@ void MainComponent::scanForPlugins()
             juce::PluginDescription pluginDescription;
             pluginDescription.fileOrIdentifier = pluginPath;
             pluginDescription.name = pluginName;
+            pluginDescription.pluginFormatName = format->getName();
             pluginMap[pluginName] = pluginDescription;
 
             vstComboBox.addItem(pluginName, vstComboBox.getNumItems() + 1);
@@ -134,32 +135,50 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
     {
         const juce::PluginDescription &pluginDescription = it->second;
         std::cout << "Plugin description found for: " << pluginName << std::endl;
-        auto *format = formatManager.getFormat(0); // Assuming VST3 format for simplicity
-        format->createPluginInstanceAsync(pluginDescription, 44100.0, 512, [this, pluginName](std::unique_ptr<juce::AudioPluginInstance> instance, const juce::String &error)
-                                          {
-            if (instance != nullptr)
-            {
-                auto nodeId = audioGraph.addNode(std::move(instance))->nodeID;
-                std::cout << "Added plugin to graph with node ID: " << static_cast<int>(nodeId.uid) << std::endl;
 
-                // Update UI to show the added plugin
-                juce::Label* pluginLabel = new juce::Label();
-                pluginLabel->setText(pluginName, juce::dontSendNotification);
-                addAndMakeVisible(pluginLabel);
-                pluginLabels.add(pluginLabel);
-                resized(); // Update layout
-            }
-            else
+        // Get the format based on the plugin description
+        juce::AudioPluginFormat *format = nullptr;
+        for (int i = 0; i < formatManager.getNumFormats(); ++i)
+        {
+            auto *currentFormat = formatManager.getFormat(i);
+            if (currentFormat->getName() == pluginDescription.pluginFormatName)
             {
-                std::cout << "Failed to create plugin instance: " << error << std::endl;
-            } });
+                format = currentFormat;
+                break;
+            }
+        }
+
+        if (format != nullptr)
+        {
+            format->createPluginInstanceAsync(pluginDescription, 44100.0, 512, [this, pluginName](std::unique_ptr<juce::AudioPluginInstance> instance, const juce::String &error)
+                                              {
+                if (instance != nullptr)
+                {
+                    auto nodeId = audioGraph.addNode(std::move(instance))->nodeID;
+                    std::cout << "Added plugin to graph with node ID: " << static_cast<int>(nodeId.uid) << std::endl;
+
+                    // Update UI to show the added plugin
+                    juce::Label* pluginLabel = new juce::Label();
+                    pluginLabel->setText(pluginName, juce::dontSendNotification);
+                    addAndMakeVisible(pluginLabel);
+                    pluginLabels.add(pluginLabel);
+                    resized(); // Update layout
+                }
+                else
+                {
+                    std::cout << "Failed to create plugin instance: " << error << std::endl;
+                } });
+        }
+        else
+        {
+            std::cout << "No format found for plugin description: " << pluginDescription.name << std::endl;
+        }
     }
     else
     {
         std::cout << "No plugin description found for: " << pluginName << std::endl;
     }
 }
-
 void MainComponent::run()
 {
     scanForPlugins();

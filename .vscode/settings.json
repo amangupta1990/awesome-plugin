@@ -2,7 +2,8 @@
   "files.associations": {
     "*.mm": "cpp",
     "ostream": "cpp",
-    "iostream": "cpp"
+    "iostream": "cpp",
+    "unordered_map": "cpp"
   },
   "cmake.debugConfig": {
     "type": "lldb"
