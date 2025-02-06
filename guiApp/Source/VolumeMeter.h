@@ -20,9 +20,9 @@ public:
     {
         g.fillAll(juce::Colours::black);
 
-        auto meterHeight = getHeight() * level;
+        auto meterWidth = getWidth() * level;
         g.setColour(juce::Colours::green);
-        g.fillRect(0, static_cast<int>(getHeight()) - static_cast<int>(meterHeight), getWidth(), static_cast<int>(meterHeight));
+        g.fillRect(0, 0, static_cast<int>(meterWidth), getHeight());
     }
 
     void timerCallback() override

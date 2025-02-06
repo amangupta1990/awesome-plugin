@@ -44,7 +44,7 @@ MainComponent::MainComponent()
 
     // Add input and output nodes to the audio graph
     auto inputNode = audioGraph.addNode(std::make_unique<juce::AudioProcessorGraph::AudioGraphIOProcessor>(juce::AudioProcessorGraph::AudioGraphIOProcessor::audioInputNode));
-    auto outputNode = audioGraph.addNode(std::make_unique<juce::AudioProcessorGraph::AudioGraphIOProcessor>(juce::AudioProcessorGraph::AudioGraphIOProcessor::audioOutputNode));
+    outputNode = audioGraph.addNode(std::make_unique<juce::AudioProcessorGraph::AudioGraphIOProcessor>(juce::AudioProcessorGraph::AudioGraphIOProcessor::audioOutputNode));
 
     if (inputNode != nullptr && outputNode != nullptr)
     {
@@ -196,6 +196,9 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
                         pluginContainer.addAndMakeVisible(editorComponent);
                         resized(); // Update layout
                     }
+
+                    // Connect the volume meter to the plugin output
+                    audioGraph.addConnection({{nodeId, 0}, {outputNode->nodeID, 0}});
                 }
                 else
                 {

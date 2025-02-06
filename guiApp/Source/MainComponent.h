@@ -34,6 +34,7 @@ private:
     juce::OwnedArray<PluginEditorComponent> pluginEditorComponents; // Store multiple plugin editors
     juce::Viewport pluginViewport;                                  // Add a viewport for horizontal scrolling
     juce::Component pluginContainer;                                // Container for plugin editors
+    juce::AudioProcessorGraph::Node::Ptr outputNode;                // Declare outputNode as a member variable
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };
