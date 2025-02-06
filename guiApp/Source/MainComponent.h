@@ -1,9 +1,14 @@
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_gui_basics/juce_gui_basics.h>
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_audio_plugin_client/juce_audio_plugin_client.h>
+#include <juce_audio_utils/juce_audio_utils.h>
+#include <unordered_map>
 
 class MainComponent : public juce::Component,
-                      private juce::ComboBox::Listener
+                      private juce::ComboBox::Listener,
+                      private juce::Thread
 {
 public:
     MainComponent();
@@ -13,17 +18,20 @@ public:
     void resized() override;
 
 private:
-    void scanForPlugins();
     void comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged) override;
+    void scanForPlugins();
     void addPluginToGraph(const juce::String &pluginName);
+    void run() override;
 
     juce::ComboBox vstComboBox;
-    juce::AudioPluginFormatManager formatManager;
-    juce::KnownPluginList pluginList;
-    juce::AudioProcessorGraph audioGraph;
     juce::AudioDeviceManager deviceManager;
     juce::AudioProcessorPlayer audioProcessorPlayer;
-    juce::OwnedArray<juce::Label> pluginLabels; // Declare pluginLabels
+    juce::AudioProcessorGraph audioGraph;
+    juce::AudioPluginFormatManager formatManager;
+    juce::KnownPluginList pluginList;
+    juce::OwnedArray<juce::Label> pluginLabels;
+
+    std::unordered_map<juce::String, juce::PluginDescription> pluginMap; // Hash map to store plugin descriptions
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

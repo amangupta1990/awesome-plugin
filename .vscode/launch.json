@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch",
+      "name": "clean build and Launch",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/guiApp/GuiApp_artefacts/Release/one plugin to rule them all.app/Contents/MacOS/one plugin to rule them all",
@@ -20,6 +20,33 @@
         }
       ],
       "preLaunchTask": "build"
+    },
+    {
+      "name": "Launch without build",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/guiApp/GuiApp_artefacts/Release/one plugin to rule them all.app/Contents/MacOS/one plugin to rule them all",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "lldb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    },
+    {
+      "name": "Launch with lldb-dap",
+      "type": "lldb-dap",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/guiApp/GuiApp_artefacts/Debug/one plugin to rule them all.app/Contents/MacOS/one plugin to rule them all",
+      "args": [],
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

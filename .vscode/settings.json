@@ -3,5 +3,8 @@
     "*.mm": "cpp",
     "ostream": "cpp",
     "iostream": "cpp"
+  },
+  "cmake.debugConfig": {
+    "type": "lldb"
   }
 }

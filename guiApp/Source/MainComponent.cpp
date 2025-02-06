@@ -1,10 +1,8 @@
 #include "MainComponent.h"
-#include <juce_audio_processors/juce_audio_processors.h>
-#include <juce_audio_plugin_client/juce_audio_plugin_client.h>
-#include <juce_audio_utils/juce_audio_utils.h>
 #include <iostream>
 
 MainComponent::MainComponent()
+    : Thread("PluginScannerThread")
 {
     std::cout << "MainComponent Constructor" << std::endl;
 
@@ -37,14 +35,14 @@ MainComponent::MainComponent()
     deviceManager.addAudioCallback(&audioProcessorPlayer);
     audioProcessorPlayer.setProcessor(&audioGraph);
 
-    // Scan for plugins
-    scanForPlugins();
-    std::cout << "Plugins Scanned" << std::endl;
+    // Start the plugin scanning thread
+    startThread();
 }
 
 MainComponent::~MainComponent()
 {
     std::cout << "MainComponent Destructor" << std::endl;
+    stopThread(2000); // Stop the thread with a timeout of 2 seconds
     deviceManager.removeAudioCallback(&audioProcessorPlayer);
 }
 
@@ -102,6 +100,13 @@ void MainComponent::scanForPlugins()
             juce::String pluginName = pluginFile.getFileNameWithoutExtension();
             std::cout << "Adding plugin: " << pluginName << std::endl;
             std::cout << "plugin file: " << pluginFile.getFullPathName() << std::endl;
+
+            // Add plugin to the hash map
+            juce::PluginDescription pluginDescription;
+            pluginDescription.fileOrIdentifier = pluginPath;
+            pluginDescription.name = pluginName;
+            pluginMap[pluginName] = pluginDescription;
+
             vstComboBox.addItem(pluginName, vstComboBox.getNumItems() + 1);
         }
         std::cout << "Finished processing format: " << format->getName() << std::endl;
@@ -112,6 +117,7 @@ void MainComponent::scanForPlugins()
 
 void MainComponent::comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged)
 {
+    std::cout << "ComboBox changed" << std::endl;
     if (comboBoxThatHasChanged == &vstComboBox)
     {
         juce::String selectedPlugin = vstComboBox.getText();
@@ -122,12 +128,14 @@ void MainComponent::comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged)
 
 void MainComponent::addPluginToGraph(const juce::String &pluginName)
 {
-    auto *format = formatManager.getFormat(0); // Assuming VST3 format for simplicity
-    auto pluginDescription = pluginList.getTypeForIdentifierString(pluginName);
-
-    if (pluginDescription != nullptr)
+    std::cout << "Adding plugin to graph: " << pluginName << std::endl;
+    auto it = pluginMap.find(pluginName);
+    if (it != pluginMap.end())
     {
-        format->createPluginInstanceAsync(*pluginDescription, 44100.0, 512, [this, pluginName](std::unique_ptr<juce::AudioPluginInstance> instance, const juce::String &error)
+        const juce::PluginDescription &pluginDescription = it->second;
+        std::cout << "Plugin description found for: " << pluginName << std::endl;
+        auto *format = formatManager.getFormat(0); // Assuming VST3 format for simplicity
+        format->createPluginInstanceAsync(pluginDescription, 44100.0, 512, [this, pluginName](std::unique_ptr<juce::AudioPluginInstance> instance, const juce::String &error)
                                           {
             if (instance != nullptr)
             {
@@ -150,4 +158,9 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
     {
         std::cout << "No plugin description found for: " << pluginName << std::endl;
     }
+}
+
+void MainComponent::run()
+{
+    scanForPlugins();
 }

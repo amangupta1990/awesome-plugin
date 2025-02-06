@@ -2,6 +2,14 @@ cmake_minimum_required(VERSION 3.22)
 
 project(GuiApp VERSION 0.1.0)
 
+# Set the default build type to Debug if not specified
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
+
+# Add debug flags
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
+
 juce_add_gui_app(${PROJECT_NAME}
     PRODUCT_NAME "one plugin to rule them all"
     COMPANY_NAME "Aman_withaHorn"
