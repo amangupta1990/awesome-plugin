@@ -12,7 +12,7 @@
 //==============================================================================
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    scanForPlugins();
+
     return new HostAudioProcessor();
 
     

@@ -1,35 +1,61 @@
 #include <AVFoundation/AVFoundation.h>
-#include <iostream>
+#include <juce_audio_processors/juce_audio_processors.h>
 
-void scanForPlugins()
+void scanForPlugins(juce::KnownPluginList& pluginList)
 {
-    std::cout << "🔍 Scanning for AUv3 plugins..." << std::endl;
+    DBG("🔍 Scanning for AUv3 plugins...");
 
     AVAudioUnitComponentManager* manager = [AVAudioUnitComponentManager sharedAudioUnitComponentManager];
 
-    // ✅ Use a valid predicate instead of nil
-    NSPredicate* predicate = [NSPredicate predicateWithValue:YES];  
+    NSPredicate* predicate = [NSPredicate predicateWithValue:YES];
     NSArray<AVAudioUnitComponent*>* components = [manager componentsMatchingPredicate:predicate];
 
     if (components.count == 0)
     {
-        std::cout << "⚠️ No third-party AUv3 plugins found!" << std::endl;
+        DBG("⚠️ No third-party AUv3 plugins found!");
         return;
     }
 
-    std::cout << "✅ Found " << components.count << " AUv3 Plugins:" << std::endl;
+    DBG("✅ Found " << components.count << " AUv3 Plugins:");
 
     for (AVAudioUnitComponent* component in components)
     {
-        // ✅ Fix: Use `audioComponentDescription` instead of `componentDescription`
         AudioComponentDescription desc = [component audioComponentDescription];
 
-        std::cout << "🎵 Plugin: " << [component name].UTF8String
-                  << " | Type: " << desc.componentType
-                  << " | Subtype: " << desc.componentSubType
-                  << " | Manufacturer: " << desc.componentManufacturer
-                  << std::endl;
+        juce::PluginDescription pluginDescription;
+        pluginDescription.name = [component name].UTF8String;
+        pluginDescription.pluginFormatName = "AudioUnit";
+
+        // ✅ Convert Type, Subtype, and Manufacturer to 4-character codes
+        auto uint32ToFourCC = [](uint32_t code) -> juce::String
+        {
+            return juce::String::charToString((code >> 24) & 0xFF) +
+                   juce::String::charToString((code >> 16) & 0xFF) +
+                   juce::String::charToString((code >> 8) & 0xFF) +
+                   juce::String::charToString((code) & 0xFF);
+        };
+
+        juce::String category = juce::String([component typeName].UTF8String).replaceCharacters(" /", "__");
+        juce::String type = uint32ToFourCC(desc.componentType);
+        juce::String subtype = uint32ToFourCC(desc.componentSubType);
+        juce::String manufacturer = uint32ToFourCC(desc.componentManufacturer);
+
+        // ✅ Correct AUv3 identifier format
+        pluginDescription.fileOrIdentifier = "AudioUnit:" + category + "/" + type + "," + subtype + "," + manufacturer;
+
+        pluginDescription.category = [component typeName].UTF8String;
+        pluginDescription.manufacturerName = [component manufacturerName].UTF8String;
+        pluginDescription.version = [component versionString].UTF8String;
+        pluginDescription.uniqueId = desc.componentSubType;
+
+        pluginList.addType(pluginDescription);
+
+        DBG("🎵 Plugin: " << pluginDescription.name
+            << " | Identifier: " << pluginDescription.fileOrIdentifier  // ✅ Correctly formatted identifier
+            << " | Type: " << type
+            << " | Subtype: " << subtype
+            << " | Manufacturer: " << manufacturer);
     }
 
-    std::cout << "✅ Finished scanning for plugins!" << std::endl;
+    DBG("✅ Finished scanning for plugins!");
 }

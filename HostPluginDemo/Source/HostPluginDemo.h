@@ -60,7 +60,7 @@
 
 #pragma once
 
-void scanForPlugins();  // Function declaration
+void scanForPlugins(juce::KnownPluginList& pluginList);  // Function declaration
 
 
 
@@ -79,8 +79,8 @@ public:
         {
             PropertiesFile::Options opt;
             opt.applicationName = getName();
-            opt.commonToAllUsers = false;
-            opt.doNotSave = false;
+            opt.commonToAllUsers = true;
+            opt.doNotSave = true;
             opt.filenameSuffix = ".props";
             opt.ignoreCaseOfKeyNames = false;
             opt.storageFormat = PropertiesFile::StorageFormat::storeAsXML;
@@ -95,12 +95,12 @@ public:
         
 
 
-        if (auto savedPluginList = appProperties.getUserSettings()->getXmlValue ("pluginList"))
+        if (auto savedPluginList = appProperties.getUserSettings()->getXmlValue ("pluginList-new"))
             pluginList.recreateFromXml (*savedPluginList);
 
         MessageManagerLock lock;
         pluginList.addChangeListener (this);
-    //    scanForPlugins();
+        scanForPlugins(pluginList);
     }
 
 
@@ -322,49 +322,40 @@ public:
         }
     }
 
-    void setNewPlugin (const PluginDescription& pd, EditorStyle where, const MemoryBlock& mb = {})
+    void setNewPlugin(const PluginDescription& pd, EditorStyle where, const MemoryBlock& mb = {})
     {
-        const ScopedLock sl (innerMutex);
-
-        const auto callback = [this, where, mb] (std::unique_ptr<AudioPluginInstance> instance, const String& error)
+        const ScopedLock sl(innerMutex);
+    
+        const auto callback = [this, where, mb](std::unique_ptr<AudioPluginInstance> instance, const String& error)
         {
             if (error.isNotEmpty())
             {
-                auto options = MessageBoxOptions::makeOptionsOk (MessageBoxIconType::WarningIcon,
-                                                                 "Plugin Load Failed",
-                                                                 error);
-                messageBox = AlertWindow::showScopedAsync (options, nullptr);
+                DBG("Plugin Load Failed: " << error);  // Log the error message
+                auto options = MessageBoxOptions::makeOptionsOk(MessageBoxIconType::WarningIcon,
+                                                                "Plugin Load Failed",
+                                                                error);
+                messageBox = AlertWindow::showScopedAsync(options, nullptr);
                 return;
             }
-
-            inner = std::move (instance);
+    
+            inner = std::move(instance);
             editorStyle = where;
-
-            if (inner != nullptr && ! mb.isEmpty())
-                inner->setStateInformation (mb.getData(), (int) mb.getSize());
-
-            // In a 'real' plugin, we'd also need to set the bus configuration of the inner plugin.
-            // One possibility would be to match the bus configuration of the wrapper plugin, but
-            // the inner plugin isn't guaranteed to support the same layout. Alternatively, we
-            // could try to apply a reasonably similar layout, and maintain a mapping between the
-            // inner/outer channel layouts.
-            //
-            // In any case, it is essential that the inner plugin is told about the bus
-            // configuration that will be used. The AudioBuffer passed to the inner plugin must also
-            // exactly match this layout.
-
+    
+            if (inner != nullptr && !mb.isEmpty())
+                inner->setStateInformation(mb.getData(), (int)mb.getSize());
+    
             if (active)
             {
-                inner->setRateAndBufferSizeDetails (getSampleRate(), getBlockSize());
-                inner->prepareToPlay (getSampleRate(), getBlockSize());
+                inner->setRateAndBufferSizeDetails(getSampleRate(), getBlockSize());
+                inner->prepareToPlay(getSampleRate(), getBlockSize());
             }
-
-            NullCheckedInvocation::invoke (pluginChanged);
+    
+            NullCheckedInvocation::invoke(pluginChanged);
         };
-
-        pluginFormatManager.createPluginInstanceAsync (pd, getSampleRate(), getBlockSize(), callback);
+    
+        DBG("Loading plugin: " << pd.name << " | Identifier: " << pd.fileOrIdentifier);  // Log the plugin being loaded
+        pluginFormatManager.createPluginInstanceAsync(pd, getSampleRate(), getBlockSize(), callback);
     }
-
     void clearPlugin()
     {
         const ScopedLock sl (innerMutex);
