@@ -7,11 +7,15 @@
               useAppConfig="0" addUsingNamespaceToJuceHeader="1" id="cDpoL5"
               jucerFormatVersion="1">
   <MAINGROUP id="HgJUps" name="HostPluginDemo">
-    <GROUP id="{99CDF757-4F37-6ABE-9A74-56683850DF54}" name="Source">
-      <FILE id="vRQ15V" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
-      <FILE id="w2VHjv" name="HostPluginDemo.h" compile="0" resource="0"
-            file="Source/HostPluginDemo.h"/>
-    </GROUP>
+    <GROUP id="{99CDF757-4F37-6ABE-9A74-56683850DF54}" name="Source"/>
+    <FILE id="LuUGeE" name="MainComponent.cpp" compile="1" resource="0"
+          file="Source/MainComponent.cpp"/>
+    <FILE id="j0B8Yb" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
+    <FILE id="Sn3FNF" name="PluginEditorComponent.h" compile="0" resource="0"
+          file="Source/PluginEditorComponent.h"/>
+    <FILE id="ZqQPue" name="PluginScanner.mm" compile="1" resource="0"
+          file="Source/PluginScanner.mm"/>
+    <FILE id="Iu7tbb" name="VolumeMeter.h" compile="0" resource="0" file="Source/VolumeMeter.h"/>
   </MAINGROUP>
   <MODULES>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>

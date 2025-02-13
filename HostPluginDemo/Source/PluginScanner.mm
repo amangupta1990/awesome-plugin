@@ -1,7 +1,8 @@
 #include <AVFoundation/AVFoundation.h>
 #include <juce_audio_processors/juce_audio_processors.h>
+#include "MainComponent.h"
 
-void scanForPlugins(juce::KnownPluginList& pluginList)
+void scanForPlugins(juce::HashMap<juce::String, juce::PluginDescription>& pluginMap)
 {
     DBG("🔍 Scanning for AUv3 plugins...");
 
@@ -48,7 +49,8 @@ void scanForPlugins(juce::KnownPluginList& pluginList)
         pluginDescription.version = [component versionString].UTF8String;
         pluginDescription.uniqueId = desc.componentSubType;
 
-        pluginList.addType(pluginDescription);
+        // Add the plugin description to the map
+        pluginMap.set(pluginDescription.name, pluginDescription);
 
         DBG("🎵 Plugin: " << pluginDescription.name
             << " | Identifier: " << pluginDescription.fileOrIdentifier  // ✅ Correctly formatted identifier

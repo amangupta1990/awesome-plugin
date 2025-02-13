@@ -2,9 +2,6 @@
 
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="HostPluginDemo\Source">
-      <UniqueIdentifier>{96579F9E-D45E-55EC-CFE8-B78AE99850CE}</UniqueIdentifier>
-    </Filter>
     <Filter Include="HostPluginDemo">
       <UniqueIdentifier>{4F959527-B1DC-32CC-CB1F-788A790CEEE7}</UniqueIdentifier>
     </Filter>
@@ -670,8 +667,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Source\Main.cpp">
-      <Filter>HostPluginDemo\Source</Filter>
+    <ClCompile Include="..\..\Source\MainComponent.cpp">
+      <Filter>HostPluginDemo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\PluginScanner.mm">
+      <Filter>HostPluginDemo</Filter>
     </ClCompile>
     <ClCompile Include="C:\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.cpp">
       <Filter>JUCE Modules\juce_audio_basics\audio_play_head</Filter>
@@ -3522,8 +3522,14 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Source\HostPluginDemo.h">
-      <Filter>HostPluginDemo\Source</Filter>
+    <ClInclude Include="..\..\Source\MainComponent.h">
+      <Filter>HostPluginDemo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\PluginEditorComponent.h">
+      <Filter>HostPluginDemo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\VolumeMeter.h">
+      <Filter>HostPluginDemo</Filter>
     </ClInclude>
     <ClInclude Include="C:\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.h">
       <Filter>JUCE Modules\juce_audio_basics\audio_play_head</Filter>
