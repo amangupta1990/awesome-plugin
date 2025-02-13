@@ -3,6 +3,8 @@
 #include "PluginEditorComponent.h"
 #include <iostream>
 
+extern juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter();
+
 MainComponent::MainComponent()
     : Thread("PluginScannerThread")
 {
@@ -98,8 +100,6 @@ void MainComponent::resized()
     pluginContainer.setSize(getWidth() - 20, y + maxHeight); // Update the container size
     pluginViewport.setViewPosition(0, 0);                    // Ensure the viewport starts at the top
 }
-
-
 
 void MainComponent::comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged)
 {

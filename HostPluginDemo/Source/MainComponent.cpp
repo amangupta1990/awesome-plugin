@@ -3,6 +3,8 @@
 #include "PluginEditorComponent.h"
 #include <iostream>
 
+extern juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter();
+
 MainComponent::MainComponent()
     : Thread("PluginScannerThread")
 {
@@ -136,12 +138,15 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
     {
         const juce::PluginDescription &pluginDescription = pluginMap[pluginName];
         std::cout << "Plugin description found for: " << pluginName << std::endl;
+        std::cout << "Plugin format name: " << pluginDescription.pluginFormatName << std::endl;
+        std::cout << "Plugin file or identifier: " << pluginDescription.fileOrIdentifier << std::endl;
 
         // Get the format based on the plugin description
         juce::AudioPluginFormat *format = nullptr;
         for (int i = 0; i < formatManager.getNumFormats(); ++i)
         {
             auto *currentFormat = formatManager.getFormat(i);
+            std::cout << "Checking format: " << currentFormat->getName() << std::endl;
             if (currentFormat->getName() == pluginDescription.pluginFormatName)
             {
                 format = currentFormat;
@@ -151,6 +156,7 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
 
         if (format != nullptr)
         {
+            std::cout << "Format found: " << format->getName() << std::endl;
             format->createPluginInstanceAsync(pluginDescription, 44100.0, 512, [this, pluginName](std::unique_ptr<juce::AudioPluginInstance> instance, const juce::String &error)
                                               {
                 if (instance != nullptr)
@@ -202,7 +208,6 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
         std::cout << "No plugin description found for: " << pluginName << std::endl;
     }
 }
-
 void MainComponent::removePluginFromGraph(juce::AudioProcessorGraph::NodeID nodeId)
 {
     // Find the index of the plugin to be removed
@@ -259,11 +264,12 @@ void MainComponent::removePluginFromGraph(juce::AudioProcessorGraph::NodeID node
 
 void MainComponent::run()
 {
-    
     scanForPlugins(pluginMap);
-
-    
-
+    // populate the combo box with the plugin names
+    for (const auto &entry : pluginMap)
+    {
+        vstComboBox.addItem(entry.name, vstComboBox.getNumItems() + 1);
+    }
 }
 
 // Menu bar related methods

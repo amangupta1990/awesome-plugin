@@ -667,6 +667,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\Main.cpp">
+      <Filter>HostPluginDemo</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\MainComponent.cpp">
       <Filter>HostPluginDemo</Filter>
     </ClCompile>

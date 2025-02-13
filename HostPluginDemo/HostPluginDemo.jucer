@@ -8,6 +8,7 @@
               jucerFormatVersion="1">
   <MAINGROUP id="HgJUps" name="HostPluginDemo">
     <GROUP id="{99CDF757-4F37-6ABE-9A74-56683850DF54}" name="Source"/>
+    <FILE id="j6yZiK" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
     <FILE id="LuUGeE" name="MainComponent.cpp" compile="1" resource="0"
           file="Source/MainComponent.cpp"/>
     <FILE id="j0B8Yb" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>

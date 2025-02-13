@@ -23,6 +23,7 @@
 
 /* Begin PBXBuildFile section */
 		00E25C58A3A24C9C78D6CC7C /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 15C614E3045638F7592521E4 /* QuartzCore.framework */; };
+		0DE6D99DB7FF3B8E4EC10B83 /* Main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 313B0F6D966352288880896A /* Main.cpp */; };
 		0F289C93B9EFD2B16BD6EE53 /* include_juce_audio_plugin_client_ARA.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5E65401E35A93B9C6828E77 /* include_juce_audio_plugin_client_ARA.cpp */; };
 		137783073E98BC216936BC1A /* PluginScanner.mm in Sources */ = {isa = PBXBuildFile; fileRef = 87E186941D5DB4FDBBB1E318 /* PluginScanner.mm */; };
 		262D51DED38DD0F8ED38F637 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D7E0562AABBBF8958FBCCB8D /* UIKit.framework */; };
@@ -65,21 +66,21 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		07B35CEF2D5E92C8002A37C1 /* PBXContainerItemProxy */ = {
+		07B35CF22D5E9F4B002A37C1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 426EC354623FA9CD7D144484 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 1A794D1CEAA9554E51E1247C;
 			remoteInfo = "HostPluginDemo - Shared Code";
 		};
-		07B35CF02D5E92C9002A37C1 /* PBXContainerItemProxy */ = {
+		07B35CF32D5E9F4C002A37C1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 426EC354623FA9CD7D144484 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = B89FE3EEB3E2E4771A2BEAB4;
 			remoteInfo = "HostPluginDemo - Standalone Plugin";
 		};
-		07B35CF12D5E92C9002A37C1 /* PBXContainerItemProxy */ = {
+		07B35CF42D5E9F4C002A37C1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 426EC354623FA9CD7D144484 /* Project object */;
 			proxyType = 1;
@@ -105,6 +106,7 @@
 		2A8752A5DE5A0A72EFA22FBA /* include_juce_graphics_Sheenbidi.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = include_juce_graphics_Sheenbidi.c; path = ../../JuceLibraryCode/include_juce_graphics_Sheenbidi.c; sourceTree = SOURCE_ROOT; };
 		2DE236D844D6D70E9932E896 /* include_juce_audio_processors_lv2_libs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_audio_processors_lv2_libs.cpp; path = ../../JuceLibraryCode/include_juce_audio_processors_lv2_libs.cpp; sourceTree = SOURCE_ROOT; };
 		2E1903D4BCC3C6C522C511BA /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		313B0F6D966352288880896A /* Main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Main.cpp; path = ../../Source/Main.cpp; sourceTree = SOURCE_ROOT; };
 		367FCA3657E83750B4887E14 /* include_juce_core_CompilationTime.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_core_CompilationTime.cpp; path = ../../JuceLibraryCode/include_juce_core_CompilationTime.cpp; sourceTree = SOURCE_ROOT; };
 		36D1D20D69F0669F2ABD5F08 /* juce_audio_formats */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_formats; path = /Users/aman/Downloads/JUCE/modules/juce_audio_formats; sourceTree = "<absolute>"; };
 		38D0BE6AAAC85BDB630CD786 /* include_juce_gui_extra.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_gui_extra.mm; path = ../../JuceLibraryCode/include_juce_gui_extra.mm; sourceTree = SOURCE_ROOT; };
@@ -218,6 +220,7 @@
 		6BE29620C763348048F19C22 /* HostPluginDemo */ = {
 			isa = PBXGroup;
 			children = (
+				313B0F6D966352288880896A /* Main.cpp */,
 				49F066E6CCD9955DE876768B /* MainComponent.cpp */,
 				19FF11E633AF2FC55A25855C /* MainComponent.h */,
 				D23343A8F7527F46332218C5 /* PluginEditorComponent.h */,
@@ -453,6 +456,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0DE6D99DB7FF3B8E4EC10B83 /* Main.cpp in Sources */,
 				EF2D409B354E9413AA61DB87 /* MainComponent.cpp in Sources */,
 				137783073E98BC216936BC1A /* PluginScanner.mm in Sources */,
 				4D2744D52F0A3B9B8DF330F8 /* include_juce_audio_basics.mm in Sources */,
@@ -481,17 +485,17 @@
 		5CCF9C0F89CEFE0845E7AFDD /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 1A794D1CEAA9554E51E1247C /* HostPluginDemo - Shared Code */;
-			targetProxy = 07B35CEF2D5E92C8002A37C1 /* PBXContainerItemProxy */;
+			targetProxy = 07B35CF22D5E9F4B002A37C1 /* PBXContainerItemProxy */;
 		};
 		68D6609D301E0B70766B258F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 1A794D1CEAA9554E51E1247C /* HostPluginDemo - Shared Code */;
-			targetProxy = 07B35CF12D5E92C9002A37C1 /* PBXContainerItemProxy */;
+			targetProxy = 07B35CF42D5E9F4C002A37C1 /* PBXContainerItemProxy */;
 		};
 		AE7A56C43BF0E9E6AF01EFFD /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = B89FE3EEB3E2E4771A2BEAB4 /* HostPluginDemo - Standalone Plugin */;
-			targetProxy = 07B35CF02D5E92C9002A37C1 /* PBXContainerItemProxy */;
+			targetProxy = 07B35CF32D5E9F4C002A37C1 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -747,6 +751,7 @@
 					"JUCER_XCODE_IPHONE_5BC26AE3=1",
 					"JUCE_APP_VERSION=1.0.0",
 					"JUCE_APP_VERSION_HEX=0x10000",
+					"JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1",
 				);
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
@@ -858,6 +863,7 @@
 					"JUCER_XCODE_IPHONE_5BC26AE3=1",
 					"JUCE_APP_VERSION=1.0.0",
 					"JUCE_APP_VERSION_HEX=0x10000",
+					"JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1",
 				);
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
