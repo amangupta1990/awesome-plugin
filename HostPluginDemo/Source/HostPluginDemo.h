@@ -1,63 +1,3 @@
-/*
-  ==============================================================================
-
-   This file is part of the JUCE framework examples.
-   Copyright (c) Raw Material Software Limited
-
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
-   to use, copy, modify, and/or distribute this software for any purpose with or
-   without fee is hereby granted provided that the above copyright notice and
-   this permission notice appear in all copies.
-
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-   REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-   AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-   INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-   LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-   OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-   PERFORMANCE OF THIS SOFTWARE.
-
-  ==============================================================================
-*/
-
-/*******************************************************************************
- The block below describes the properties of this PIP. A PIP is a short snippet
- of code that can be read by the Projucer and used to generate a JUCE project.
-
- BEGIN_JUCE_PIP_METADATA
-
- name:                  HostPluginDemo
- version:               1.0.0
- vendor:                JUCE
- website:               http://juce.com
- description:           Plugin that can host other plugins
-
- dependencies:          juce_audio_basics, juce_audio_devices, juce_audio_formats,
-                        juce_audio_plugin_client, juce_audio_processors,
-                        juce_audio_utils, juce_core, juce_data_structures,
-                        juce_events, juce_graphics, juce_gui_basics, juce_gui_extra
- exporters:             xcode_mac, vs2022, linux_make
-
- moduleFlags:           JUCE_STRICT_REFCOUNTEDPOINTER=1
-                        JUCE_PLUGINHOST_LV2=1
-                        JUCE_PLUGINHOST_VST3=1
-                        JUCE_PLUGINHOST_VST=0
-                        JUCE_PLUGINHOST_AU=1
-
- type:                  AudioProcessor
- mainClass:             HostAudioProcessor
-
- useLocalCopy:          1
-
- pluginCharacteristics: pluginIsSynth, pluginWantsMidiIn, pluginProducesMidiOut,
-                        pluginEditorRequiresKeys
-
- END_JUCE_PIP_METADATA
-
-*******************************************************************************/
-
-
 #pragma once
 
 void scanForPlugins(juce::KnownPluginList& pluginList);  // Function declaration
@@ -104,120 +44,7 @@ public:
     }
 
 
-//    void scanForPlugins()
-//    {
-//        std::cout << "🔍 Scanning for AUv3 plugins..." << std::endl;
-//    
-//        // Initialize the plugin format manager
-//        AudioPluginFormatManager formatManager;
-//        formatManager.addDefaultFormats();  // Automatically includes AUv3
-//    
-//        KnownPluginList knownPluginList;
-//    
-//        // Scan using the iOS system registry
-//        AVAudioUnitComponentManager* manager = [AVAudioUnitComponentManager sharedAudioUnitComponentManager];
-//    
-//        NSArray<AVAudioUnitComponent*>* components = [manager componentsMatchingPredicate:nil];
-//        
-//        std::cout << "🔎 Found " << components.count << " AUv3 Plugins:" << std::endl;
-//    
-//        for (AVAudioUnitComponent* component in components)
-//        {
-//            std::cout << "🎵 Plugin: " << [component name].UTF8String
-//                      << " | Identifier: " << [component componentDescription].componentSubType
-//                      << std::endl;
-//        }
-//    
-//        std::cout << "✅ Finished scanning for plugins!" << std::endl;
-//    }
-//    
-    
 
-
-    // void scanForPlugins()
-    // {
-    //     std::cout << "Scanning for plugins" << std::endl;
-    
-    //     juce::FileSearchPath searchPath;
-    //     searchPath.add(juce::File("/Library/Audio/Plug-Ins/Components").getFullPathName());
-    //     searchPath.add(juce::File("~/Library/Audio/Plug-Ins/Components").getFullPathName());
-    //     searchPath.add(juce::File("/Library/Audio/Plug-Ins/VST3").getFullPathName());
-    //     searchPath.add(juce::File("~/Library/Audio/Plug-Ins/VST3").getFullPathName());
-    //     searchPath.add(juce::File("/Library/Audio/Plug-Ins/VST").getFullPathName());
-    //     searchPath.add(juce::File("~/Library/Audio/Plug-Ins/VST").getFullPathName());
-    //     searchPath.add(juce::File("~/").getFullPathName()); // Add home directory
-    
-    //     std::cout << "Search paths added: " << searchPath.toString() << std::endl;
-    
-    //     for (int i = 0; i < pluginFormatManager.getNumFormats(); ++i)
-    //     {
-    //         auto* format = pluginFormatManager.getFormat(i);
-    //         std::cout << "Searching for plugins with format: " << format->getName() << std::endl;
-    
-    //         for (int pathIndex = 0; pathIndex < searchPath.getNumPaths(); ++pathIndex)
-    //         {
-    //             juce::File directory(searchPath[pathIndex]);
-    //             if (directory.isDirectory())
-    //             {
-    //                 juce::Array<juce::File> files;
-    //                 directory.findChildFiles(files, juce::File::findFiles, true);
-    
-    //                 for (auto& file : files)
-    //                 {
-    //                     juce::String pluginPath = file.getFullPathName();
-    //                     std::cout << "Found plugin at path: " << pluginPath << std::endl;
-    
-    //                     if (dynamic_cast<juce::AudioUnitPluginFormat*>(format) != nullptr)
-    //                     {
-    //                         // Handle Audio Unit plugins
-    //                         juce::PluginDescription pluginDescription;
-    //                         pluginDescription.fileOrIdentifier = pluginPath;
-    //                         pluginDescription.name = pluginPath; // Use the identifier as the name
-    //                         pluginDescription.pluginFormatName = format->getName();
-    //                         pluginDescription.category = "Effect"; // Example category, adjust as needed
-    //                         pluginDescription.manufacturerName = "Unknown"; // Example manufacturer, adjust as needed
-    
-    //                         pluginList.addType(pluginDescription);
-    //                     }
-    //                     else
-    //                     {
-    //                         // Handle other plugin formats
-    //                         juce::File pluginFile(pluginPath);
-    //                         juce::String pluginName = pluginFile.getFileNameWithoutExtension();
-    //                         std::cout << "Adding plugin: " << pluginName << std::endl;
-    //                         std::cout << "plugin file: " << pluginFile.getFullPathName() << std::endl;
-    
-    //                         juce::PluginDescription pluginDescription;
-    //                         pluginDescription.fileOrIdentifier = pluginPath;
-    //                         pluginDescription.name = pluginDescription.descriptiveName.isNotEmpty() ? pluginDescription.descriptiveName : pluginName;
-    //                         pluginDescription.pluginFormatName = format->getName();
-    //                         pluginDescription.category = "Effect"; // Example category, adjust as needed
-    //                         pluginDescription.manufacturerName = "Unknown"; // Example manufacturer, adjust as needed
-    
-    //                         pluginList.addType(pluginDescription);
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //         std::cout << "Finished processing format: " << format->getName() << std::endl;
-    //     }
-    
-    //     std::cout << "Finished scanning for plugins" << std::endl;
-    // }
-
-    // bool isBusesLayoutSupported (const BusesLayout& layouts) const final
-    // {
-    //     const auto& mainOutput = layouts.getMainOutputChannelSet();
-    //     const auto& mainInput  = layouts.getMainInputChannelSet();
-
-    //     if (! mainInput.isDisabled() && mainInput != mainOutput)
-    //         return false;
-
-    //     if (mainOutput.size() > 2)
-    //         return false;
-
-    //     return true;
-    // }
 
     void prepareToPlay (double sr, int bs) final
     {
@@ -432,69 +259,28 @@ public:
         pluginListComponent.getTableListBox().setMultipleSelectionEnabled (false);
 
         addAndMakeVisible (pluginListComponent);
-        addAndMakeVisible (buttons);
+        addAndMakeVisible (addButton);
 
-        const auto getCallback = [this, &list, cb = std::forward<Callback> (callback)] (EditorStyle style)
+        addButton.onClick = [this, &list, cb = std::forward<Callback> (callback)]
         {
-            return [this, &list, cb, style]
-            {
-                const auto index = pluginListComponent.getTableListBox().getSelectedRow();
-                const auto& types = list.getTypes();
+            const auto index = pluginListComponent.getTableListBox().getSelectedRow();
+            const auto& types = list.getTypes();
 
-                if (isPositiveAndBelow (index, types.size()))
-                    NullCheckedInvocation::invoke (cb, types.getReference (index), style);
-            };
+            if (isPositiveAndBelow (index, types.size()))
+                NullCheckedInvocation::invoke (cb, types.getReference (index));
         };
-
-        buttons.thisWindowButton.onClick = getCallback (EditorStyle::thisWindow);
-        buttons.newWindowButton .onClick = getCallback (EditorStyle::newWindow);
     }
 
     void resized() override
     {
-        doLayout (&pluginListComponent, buttons, 80, getLocalBounds());
+        auto area = getLocalBounds();
+        pluginListComponent.setBounds(area.removeFromTop(area.getHeight() - 40));
+        addButton.setBounds(area);
     }
 
 private:
-    struct Buttons final : public Component
-    {
-        Buttons()
-        {
-            label.setJustificationType (Justification::centred);
-
-            addAndMakeVisible (label);
-            addAndMakeVisible (thisWindowButton);
-            addAndMakeVisible (newWindowButton);
-        }
-
-        void resized() override
-        {
-            Grid vertical;
-            vertical.autoFlow = Grid::AutoFlow::row;
-            vertical.setGap (Grid::Px { margin });
-            vertical.autoRows = vertical.autoColumns = Grid::TrackInfo { Grid::Fr { 1 } };
-            vertical.items.insertMultiple (0, GridItem{}, 2);
-            vertical.performLayout (getLocalBounds());
-
-            label.setBounds (vertical.items[0].currentBounds.toNearestInt());
-
-            Grid grid;
-            grid.autoFlow = Grid::AutoFlow::column;
-            grid.setGap (Grid::Px { margin });
-            grid.autoRows = grid.autoColumns = Grid::TrackInfo { Grid::Fr { 1 } };
-            grid.items = { GridItem { thisWindowButton },
-                           GridItem { newWindowButton } };
-
-            grid.performLayout (vertical.items[1].currentBounds.toNearestInt());
-        }
-
-        Label label { "", "Select a plugin from the list, then display it using the buttons below." };
-        TextButton thisWindowButton { "Open In This Window" };
-        TextButton newWindowButton { "Open In New Window" };
-    };
-
     PluginListComponent pluginListComponent;
-    Buttons buttons;
+    TextButton addButton { "Add to Chain" };
 };
 
 //==============================================================================
@@ -556,25 +342,81 @@ private:
 };
 
 //==============================================================================
+class EffectsChainComponent : public Component
+{
+public:
+    EffectsChainComponent(HostAudioProcessorImpl& processor)
+        : hostProcessor(processor)
+    {
+        addAndMakeVisible(addButton);
+        addButton.onClick = [this] { openPluginDialog(); };
+    }
+
+    void resized() override
+    {
+        auto area = getLocalBounds();
+        addButton.setBounds(area.removeFromRight(50).reduced(5));
+        for (auto* pluginButton : pluginButtons)
+            pluginButton->setBounds(area.removeFromLeft(100).reduced(5));
+    }
+
+    void addPlugin(const PluginDescription& pd)
+    {
+        auto* pluginButton = new TextButton(pd.name);
+        pluginButtons.add(pluginButton);
+        addAndMakeVisible(pluginButton);
+        resized();
+    }
+
+private:
+    void openPluginDialog()
+    {
+        DBG("Opening plugin dialog...");
+
+        auto* pluginLoader = new PluginLoaderComponent(hostProcessor.pluginFormatManager, hostProcessor.pluginList, 
+            [this](const PluginDescription& pd)
+            {
+                hostProcessor.setNewPlugin(pd, EditorStyle::thisWindow);
+                addPlugin(pd);
+                if (auto* dialog = DialogWindow::getCurrentlyModalComponent())
+                {
+                    dialog->exitModalState(0);
+                }
+            });
+
+        pluginLoader->setSize(400, 300); // Set a reasonable size for the dialog content
+
+        DialogWindow::LaunchOptions options;
+        options.content.setOwned(pluginLoader);
+        options.dialogTitle = "Select Plugin";
+        options.dialogBackgroundColour = Colours::lightgrey;
+        options.escapeKeyTriggersCloseButton = true;
+        options.useNativeTitleBar = true;
+        options.resizable = true;
+        options.launchAsync();
+
+        DBG("Plugin dialog launched.");
+    }
+
+    HostAudioProcessorImpl& hostProcessor;
+    TextButton addButton { "+" };
+    OwnedArray<TextButton> pluginButtons;
+};
+
+//==============================================================================
 class HostAudioProcessorEditor final : public AudioProcessorEditor
 {
 public:
     explicit HostAudioProcessorEditor (HostAudioProcessorImpl& owner)
         : AudioProcessorEditor (owner),
           hostProcessor (owner),
-          loader (owner.pluginFormatManager,
-                  owner.pluginList,
-                  [&owner] (const PluginDescription& pd,
-                            EditorStyle editorStyle)
-                  {
-                      owner.setNewPlugin (pd, editorStyle);
-                  }),
-          scopedCallback (owner.pluginChanged, [this] { pluginChanged(); })
+          scopedCallback (owner.pluginChanged, [this] { pluginChanged(); }),
+          effectsChain(owner)
     {
         setSize (500, 500);
         setResizable (false, false);
         addAndMakeVisible (closeButton);
-        addAndMakeVisible (loader);
+        addAndMakeVisible (effectsChain);
 
         hostProcessor.pluginChanged();
 
@@ -588,8 +430,9 @@ public:
 
     void resized() override
     {
-        closeButton.setBounds (getLocalBounds().withSizeKeepingCentre (200, buttonHeight));
-        loader.setBounds (getLocalBounds());
+        auto area = getLocalBounds();
+        effectsChain.setBounds(area.removeFromTop(50));
+        closeButton.setBounds (area.removeFromBottom(30).withSizeKeepingCentre (200, buttonHeight));
     }
 
     void childBoundsChanged (Component* child) override
@@ -621,7 +464,6 @@ public:
 private:
     void pluginChanged()
     {
-        loader.setVisible (! hostProcessor.isPluginLoaded());
         closeButton.setVisible (hostProcessor.isPluginLoaded());
 
         if (hostProcessor.isPluginLoaded())
@@ -675,15 +517,16 @@ private:
     static constexpr auto buttonHeight = 30;
 
     HostAudioProcessorImpl& hostProcessor;
-    PluginLoaderComponent loader;
     std::unique_ptr<Component> editor;
     PluginEditorComponent* currentEditorComponent = nullptr;
     ScopedValueSetter<std::function<void()>> scopedCallback;
     TextButton closeButton { "Close Plugin" };
+    EffectsChainComponent effectsChain;
     float currentScaleFactor = 1.0f;
 };
 
 //==============================================================================
+
 class HostAudioProcessor final : public HostAudioProcessorImpl
 {
 public:
