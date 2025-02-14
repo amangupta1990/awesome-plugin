@@ -99,25 +99,29 @@ void MainComponent::resized()
     volumeMeter.setBounds(10, 70, getWidth() - 20, 60); // Adjust height to accommodate buttons
     pluginViewport.setBounds(10, 140, getWidth() - 20, getHeight() - 150);
 
-    int x = 0;
-    int y = 0;
-    int maxHeight = 0;
+    int totalHeight = 0;
     for (auto *editor : pluginEditorComponents)
     {
-        editor->setBounds(x, y, 300, 230); // Set wider dimensions for the plugin editors and space for delete button
-        x += 310;                          // Add some spacing between editors
-        maxHeight = std::max(maxHeight, editor->getHeight());
-        if (x + 300 > getWidth() - 20) // Move to next row if overflow
-        {
-            x = 0;
-            y += maxHeight + 10;
-            maxHeight = 0;
-        }
+        totalHeight += editor->getHeight() + 10; // Calculate total height needed for all editors
     }
 
-    pluginContainer.setSize(getWidth() - 20, y + maxHeight); // Update the container size
-    pluginViewport.setViewPosition(0, 0);                    // Ensure the viewport starts at the top
+    // ✅ Centering plugin chain
+    int y = (getHeight() - totalHeight) / 2;
+    y = std::max(y, volumeMeter.getBottom() + 10); // Ensure it does not overlap the volume meter
+
+    for (auto *editor : pluginEditorComponents)
+    {
+        int editorWidth = editor->getWidth();
+        int x = (getWidth() - editorWidth) / 2; // Center horizontally
+
+        editor->setBounds(x, y, editorWidth, editor->getHeight());
+        y += editor->getHeight() + 20; // ✅ Add uniform spacing
+    }
+
+    pluginContainer.setSize(getWidth() - 20, y); // Update the container size
+    pluginViewport.setViewPosition(0, 0); // Ensure the viewport starts at the top
 }
+
 
 void MainComponent::comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged)
 {
