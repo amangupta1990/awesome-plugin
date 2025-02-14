@@ -19,10 +19,28 @@ public:
     juce::AudioProcessorGraph::NodeID getNodeID() const { return nodeID; }
     void setNodeID(juce::AudioProcessorGraph::NodeID id) { nodeID = id; }
 
+    void setScaleFactor(float scale)
+    {
+        if (editor != nullptr)
+            editor->setScaleFactor(scale);
+    }
+
     void resized() override
     {
-        editor->setBounds(0, 0, getWidth(), getHeight() - 30);             // Adjust for delete button
-        deleteButton.setBounds(10, getHeight() - 25, getWidth() - 20, 20); // Slight gap
+        auto area = getLocalBounds();
+        editor->setBounds(area.removeFromTop(area.getHeight() - 30));             // Adjust for delete button
+        deleteButton.setBounds(area); // Slight gap
+    }
+
+    void childBoundsChanged(juce::Component* child) override
+    {
+        if (child != editor.get())
+            return;
+
+        const auto size = editor != nullptr ? editor->getLocalBounds()
+                                            : juce::Rectangle<int>();
+
+        setSize(size.getWidth(), 30 + size.getHeight());
     }
 
 private:
