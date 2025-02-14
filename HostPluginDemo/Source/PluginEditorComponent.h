@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "FullScreenView.h"
 
 class PluginEditorComponent : public juce::Component
 {
@@ -37,6 +38,9 @@ public:
         expandButton.onClick = [this] { toggleFullscreen(); };
         closeButton.onClick = [this] { exitFullscreen(); };
 
+        fullScreenView = std::make_unique<FullScreenView>(nullptr, [this] { exitFullscreen(); });
+        addAndMakeVisible(fullScreenView.get());
+
         updateEditorSize();
     }
 
@@ -69,6 +73,7 @@ private:
 
     bool isFullscreen;
     juce::Rectangle<int> previousBounds;
+    std::unique_ptr<FullScreenView> fullScreenView;
 
     void updateEditorSize()
     {
@@ -117,10 +122,16 @@ private:
         {
             previousBounds = getBounds();
             isFullscreen = true;
+            fullScreenView->setEditor(std::move(editor));
+            fullScreenView->setVisible(true);
+            fullScreenView->toFront(true);
+            fullScreenView->setBounds(0, 0, getParentWidth(), getParentHeight());
         }
         else
         {
             isFullscreen = false;
+            editor = fullScreenView->releaseEditor();
+            fullScreenView->setVisible(false);
         }
         updateEditorSize();
     }
@@ -128,6 +139,8 @@ private:
     void exitFullscreen()
     {
         isFullscreen = false;
+        editor = fullScreenView->releaseEditor();
+        fullScreenView->setVisible(false);
         setBounds(previousBounds);
         updateEditorSize();
     }
