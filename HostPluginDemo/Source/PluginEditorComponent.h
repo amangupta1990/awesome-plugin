@@ -6,20 +6,37 @@ class PluginEditorComponent : public juce::Component
 {
 public:
     PluginEditorComponent(std::unique_ptr<juce::AudioProcessorEditor> editor, std::function<void()> onClose)
-        : editor(std::move(editor)), onClose(std::move(onClose))
+        : editor(std::move(editor)), onClose(std::move(onClose)), isFullscreen(false)
     {
         jassert(this->editor != nullptr); // Ensure the editor is valid
 
         editorHolder.addAndMakeVisible(this->editor.get());
         addAndMakeVisible(editorHolder);
         addAndMakeVisible(deleteButton);
+        addAndMakeVisible(expandButton);
+        addChildComponent(closeButton); // Initially hidden
 
-        deleteButton.setButtonText("Delete");
+        // ✅ FIX: Now deleteButtonSvg() and expandButtonSvg() are recognized
+        auto deleteSvg = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(deleteButtonSvg()));
+        auto expandSvg = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(expandButtonSvg()));
+        auto closeSvg = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(closeButtonSvg()));
 
-        // ✅ Capture `onClose` properly
+        deleteButton.setImages(deleteSvg.get());
+        expandButton.setImages(expandSvg.get());
+        closeButton.setImages(closeSvg.get());
+
+        deleteButton.setButtonStyle(juce::DrawableButton::ButtonStyle::ImageFitted);
+        expandButton.setButtonStyle(juce::DrawableButton::ButtonStyle::ImageFitted);
+        closeButton.setButtonStyle(juce::DrawableButton::ButtonStyle::ImageFitted);
+
+        deleteButton.setClickingTogglesState(false);
+        expandButton.setClickingTogglesState(false);
+        closeButton.setClickingTogglesState(false);
+
         deleteButton.onClick = [this, callback = std::move(onClose)] { callback(); };
+        expandButton.onClick = [this] { toggleFullscreen(); };
+        closeButton.onClick = [this] { exitFullscreen(); };
 
-        // ✅ Resize editor dynamically with constraints
         updateEditorSize();
     }
 
@@ -43,57 +60,112 @@ public:
 
 private:
     std::unique_ptr<juce::AudioProcessorEditor> editor;
-    juce::Component editorHolder; // ✅ Wrapper to hold the editor
+    juce::Component editorHolder; // Wrapper to hold the editor
     std::function<void()> onClose;
-    juce::TextButton deleteButton;
+    juce::DrawableButton deleteButton { "Delete", juce::DrawableButton::ButtonStyle::ImageFitted };
+    juce::DrawableButton expandButton { "Expand", juce::DrawableButton::ButtonStyle::ImageFitted };
+    juce::DrawableButton closeButton { "Close", juce::DrawableButton::ButtonStyle::ImageFitted };
     juce::AudioProcessorGraph::NodeID nodeID;
+
+    bool isFullscreen;
+    juce::Rectangle<int> previousBounds;
 
     void updateEditorSize()
     {
         if (editor == nullptr)
             return;
 
-        int editorWidth = editor->getWidth();
-        int editorHeight = editor->getHeight();
-
-        if (editorWidth == 0 || editorHeight == 0)
-            return;
-
-        // ✅ Get parent dimensions
         int parentWidth = getParentWidth();
         int parentHeight = getParentHeight();
 
-        // ✅ Keep editors at a **reasonable size**
-        int maxWidth = parentWidth * 0.5f;  // Max 50% of available width
-        int maxHeight = parentHeight * 0.5f; // Max 50% of available height
-
-        float aspectRatio = static_cast<float>(editorWidth) / editorHeight;
-
-        // ✅ Maintain aspect ratio while constraining the size
-        int newWidth = std::min(editorWidth, maxWidth);
-        int newHeight = static_cast<int>(newWidth / aspectRatio);
-
-        if (newHeight > maxHeight)
+        if (isFullscreen)
         {
-            newHeight = maxHeight;
-            newWidth = static_cast<int>(newHeight * aspectRatio);
+            setBounds(0, 0, parentWidth, parentHeight);
+            editorHolder.setBounds(20, 20, parentWidth - 40, parentHeight - 80);
+            editor->setBounds(0, 0, parentWidth - 40, parentHeight - 80);
+            closeButton.setBounds(parentWidth - 50, 10, 40, 40);
+            closeButton.setVisible(true);
+            expandButton.setVisible(false);
+            deleteButton.setVisible(false);
         }
+        else
+        {
+            int newWidth = 400;
+            int newHeight = 300;
 
-        // ✅ Keep minimum size so it's never too small
-        int minWidth = 300;
-        int minHeight = 200;
+            int centerX = (parentWidth - newWidth) / 2;
+            int centerY = (parentHeight - newHeight - 70) / 2;
 
-        newWidth = std::max(newWidth, minWidth);
-        newHeight = std::max(newHeight, minHeight);
+            setBounds(centerX, centerY, newWidth, newHeight + 70);
+            editorHolder.setBounds(0, 70, newWidth, newHeight);
+            editor->setBounds(0, 0, newWidth, newHeight);
 
-        // ✅ Set new size, leaving space for delete button
-        setSize(newWidth, newHeight + 40); 
+            int buttonSize = 40;
+            int buttonX = (newWidth - 90) / 2;
 
-        // ✅ Center editor and delete button properly
-        editorHolder.setBounds(0, 0, newWidth, newHeight);
-        editor->setBounds(0, 0, newWidth, newHeight);
+            deleteButton.setBounds(buttonX, 10, buttonSize, buttonSize);
+            expandButton.setBounds(buttonX + buttonSize + 15, 10, buttonSize, buttonSize);
+            closeButton.setVisible(false);
+            expandButton.setVisible(true);
+            deleteButton.setVisible(true);
+        }
+    }
 
-        deleteButton.setBounds((newWidth - 80) / 2, newHeight + 5, 80, 30); // Center delete button
+    void toggleFullscreen()
+    {
+        if (!isFullscreen)
+        {
+            previousBounds = getBounds();
+            isFullscreen = true;
+        }
+        else
+        {
+            isFullscreen = false;
+        }
+        updateEditorSize();
+    }
+
+    void exitFullscreen()
+    {
+        isFullscreen = false;
+        setBounds(previousBounds);
+        updateEditorSize();
+    }
+
+    // ✅ FIX: Declare deleteButtonSvg and expandButtonSvg inside the class
+    juce::String deleteButtonSvg() const
+    {
+        return R"(
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="20" cy="20" r="18" stroke="white" stroke-width="2" fill="none"/>
+                <line x1="12" y1="12" x2="28" y2="28" stroke="white" stroke-width="2"/>
+                <line x1="12" y1="28" x2="28" y2="12" stroke="white" stroke-width="2"/>
+            </svg>
+        )";
+    }
+
+    juce::String expandButtonSvg() const
+    {
+        return R"(
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="20" cy="20" r="18" stroke="white" stroke-width="2" fill="none"/>
+                <line x1="16" y1="16" x2="8" y2="8" stroke="white" stroke-width="2"/>
+                <line x1="24" y1="16" x2="32" y2="8" stroke="white" stroke-width="2"/>
+                <line x1="16" y1="24" x2="8" y2="32" stroke="white" stroke-width="2"/>
+                <line x1="24" y1="24" x2="32" y2="32" stroke="white" stroke-width="2"/>
+            </svg>
+        )";
+    }
+
+    juce::String closeButtonSvg() const
+    {
+        return R"(
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="20" cy="20" r="18" stroke="white" stroke-width="2" fill="none"/>
+                <line x1="12" y1="12" x2="28" y2="28" stroke="white" stroke-width="2"/>
+                <line x1="12" y1="28" x2="28" y2="12" stroke="white" stroke-width="2"/>
+            </svg>
+        )";
     }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginEditorComponent)
