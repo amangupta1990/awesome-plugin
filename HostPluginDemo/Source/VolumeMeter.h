@@ -81,7 +81,7 @@ public:
         {
             float db = juce::Decibels::gainToDecibels(i / 10.0f);
             int x = static_cast<int>(getWidth() * (i / 10.0f));
-            g.drawLine(x, getHeight() - 50, x, getHeight() - 40); // Adjust height for buttons
+            g.drawLine(x, getHeight() - 50, x, getHeight() - 60); // Adjust height for buttons
             g.drawText(juce::String(db, 1) + " dB", x - 15, getHeight() - 60, 30, 10, juce::Justification::centred);
         }
     }
