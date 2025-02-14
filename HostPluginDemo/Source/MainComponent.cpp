@@ -99,26 +99,25 @@ void MainComponent::resized()
     volumeMeter.setBounds(10, 70, getWidth() - 20, 60); // Adjust height to accommodate buttons
     pluginViewport.setBounds(10, 140, getWidth() - 20, getHeight() - 150);
 
-    int totalHeight = 0;
+    int totalWidth = 0;
     for (auto *editor : pluginEditorComponents)
     {
-        totalHeight += editor->getHeight() + 10; // Calculate total height needed for all editors
+        totalWidth += editor->getWidth() + 10; // Calculate total width needed for all editors
     }
 
-    // ✅ Centering plugin chain
-    int y = (getHeight() - totalHeight) / 2;
-    y = std::max(y, volumeMeter.getBottom() + 10); // Ensure it does not overlap the volume meter
+    int x = (getWidth() - totalWidth) / 2; // Start from the center horizontally
+    x = std::max(x, 10); // Ensure it does not go out of bounds
 
     for (auto *editor : pluginEditorComponents)
     {
-        int editorWidth = editor->getWidth();
-        int x = (getWidth() - editorWidth) / 2; // Center horizontally
+        int editorHeight = editor->getHeight();
+        int y = (getHeight() - editorHeight) / 2; // Center align vertically
 
-        editor->setBounds(x, y, editorWidth, editor->getHeight());
-        y += editor->getHeight() + 20; // ✅ Add uniform spacing
+        editor->setBounds(x, y, editor->getWidth(), editorHeight);
+        x += editor->getWidth() + 20; // Add uniform spacing
     }
 
-    pluginContainer.setSize(getWidth() - 20, y); // Update the container size
+    pluginContainer.setSize(x, getHeight() - 150); // Update the container size
     pluginViewport.setViewPosition(0, 0); // Ensure the viewport starts at the top
 }
 
