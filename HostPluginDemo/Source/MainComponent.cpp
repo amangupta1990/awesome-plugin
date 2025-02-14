@@ -89,15 +89,16 @@ void MainComponent::paint(juce::Graphics &g)
     g.fillAll(juce::Colours::darkgrey); // Set slate grey background color
     g.setColour(juce::Colours::white);
     g.setFont(20.0f);
-    g.drawText("Plugin Host", getLocalBounds(), juce::Justification::centred, true);
+   
 }
 
 void MainComponent::resized()
 {
-    menuBar.setBounds(0, 0, getWidth(), 20);
-    vstComboBox.setBounds(10, 30, getWidth() - 20, 30);
-    volumeMeter.setBounds(10, 70, getWidth() - 20, 60); // Adjust height to accommodate buttons
-    pluginViewport.setBounds(10, 140, getWidth() - 20, getHeight() - 150);
+    menuBar.setBounds(0, 20, getWidth(), 20);
+    vstComboBox.setBounds(10, 50, getWidth() - 20, 30);
+    volumeMeter.setBounds(10, 90, getWidth() - 20, 60); // Adjust height to accommodate buttons
+    pluginViewport.setBounds(10, 100, getWidth() - 20, getHeight() - 150);
+    pluginViewport.
 
     int totalWidth = 0;
     for (auto *editor : pluginEditorComponents)
