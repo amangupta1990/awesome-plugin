@@ -10,7 +10,8 @@ MainComponent::MainComponent()
 {
     std::cout << "MainComponent Constructor" << std::endl;
 
-    setSize(800, 600);
+    setSize(juce::Desktop::getInstance().getDisplays().getMainDisplay().userArea.getWidth(),
+            juce::Desktop::getInstance().getDisplays().getMainDisplay().userArea.getHeight()); // Fit the entire screen
 
     // Add the ComboBox to the component
     addAndMakeVisible(vstComboBox);
@@ -85,8 +86,8 @@ MainComponent::~MainComponent()
 
 void MainComponent::paint(juce::Graphics &g)
 {
-    g.fillAll(juce::Colours::lightgrey);
-    g.setColour(juce::Colours::black);
+    g.fillAll(juce::Colours::darkgrey); // Set slate grey background color
+    g.setColour(juce::Colours::white);
     g.setFont(20.0f);
     g.drawText("Plugin Host", getLocalBounds(), juce::Justification::centred, true);
 }
@@ -117,8 +118,6 @@ void MainComponent::resized()
     pluginContainer.setSize(getWidth() - 20, y + maxHeight); // Update the container size
     pluginViewport.setViewPosition(0, 0);                    // Ensure the viewport starts at the top
 }
-
-
 
 void MainComponent::comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged)
 {
@@ -208,6 +207,7 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
         std::cout << "No plugin description found for: " << pluginName << std::endl;
     }
 }
+
 void MainComponent::removePluginFromGraph(juce::AudioProcessorGraph::NodeID nodeId)
 {
     // Find the index of the plugin to be removed
@@ -406,7 +406,6 @@ void MainComponent::handleBypassEvent(bool bypassed)
     // Handle mute state after bypass state change
     handleMuteEvent(volumeMeter.isMuted());
 }
-// Handle mute state after bypass state change
 
 // AudioAppComponent methods
 void MainComponent::prepareToPlay(int /*samplesPerBlockExpected*/, double /*sampleRate*/)
