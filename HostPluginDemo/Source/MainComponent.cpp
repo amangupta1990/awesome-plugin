@@ -66,7 +66,7 @@ MainComponent::MainComponent()
         std::cout << "Failed to add input or output nodes to the audio graph" << std::endl;
     }
 
-    // Start the plugin scanning thread
+    resized();
     startThread();
 
     // Add menu bar
@@ -95,14 +95,9 @@ void MainComponent::resized()
 {
     const int statusBarHeight = 20; // Adjust this value based on the actual status bar height
 
-    if (menuBarComponent)
-    {
-        menuBarComponent->setBounds(0, statusBarHeight + 20, getWidth(), 60); // Shift the menu bar just below the status bar
-        menuBarComponent->menuBar.setBounds(0, statusBarHeight + 20, getWidth(), 20); // Shift the command manager just below the status bar
-    }
 
-    vstComboBox.setBounds(10, statusBarHeight + 70, getWidth() - 20, 30);
-    pluginViewport.setBounds(10, statusBarHeight + 110, getWidth() - 20, getHeight() - (statusBarHeight + 120));
+    vstComboBox.setBounds(10, statusBarHeight + 90, getWidth() - 20, 30); // Adjusted to ensure it stays below the menu bar
+    pluginViewport.setBounds(10, statusBarHeight + 130, getWidth() - 20, getHeight() - (statusBarHeight + 140)); // Adjusted to ensure it stays below the menu bar
 
     int totalWidth = 0;
     for (auto *editor : pluginEditorComponents)
