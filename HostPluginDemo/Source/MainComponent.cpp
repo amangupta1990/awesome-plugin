@@ -17,6 +17,11 @@ MainComponent::MainComponent()
     addAndMakeVisible(vstComboBox);
     vstComboBox.addListener(this);
 
+    // Initialize the audio device manager
+    deviceManager.initialiseWithDefaultDevices(2, 2);
+    deviceManager.addAudioCallback(&audioProcessorPlayer);
+    audioProcessorPlayer.setProcessor(&audioGraph);
+
     // Initialize and add the MenuBarComponent to the component
     menuBarComponent = std::make_unique<::MenuBarComponent>(&commandManager, deviceManager);
     menuBarComponent->setMuteCallback([this](bool muted) { handleMuteEvent(muted); });
@@ -44,11 +49,6 @@ MainComponent::MainComponent()
             std::cout << "Format " << i << ": " << formatManager.getFormat(i)->getName() << std::endl;
         }
     }
-
-    // Initialize the audio device manager
-    deviceManager.initialiseWithDefaultDevices(2, 2);
-    deviceManager.addAudioCallback(&audioProcessorPlayer);
-    audioProcessorPlayer.setProcessor(&audioGraph);
 
     // Add input and output nodes to the audio graph
     inputNode = audioGraph.addNode(std::make_unique<juce::AudioProcessorGraph::AudioGraphIOProcessor>(juce::AudioProcessorGraph::AudioGraphIOProcessor::audioInputNode));
@@ -87,16 +87,18 @@ void MainComponent::paint(juce::Graphics &g)
     g.fillAll(juce::Colours::black); // Set slate grey background color
     g.setColour(juce::Colours::white);
     g.setFont(20.0f);
-   
 }
 
 void MainComponent::resized()
 {
-    menuBarComponent->menuBar.setBounds(0, 20, getWidth(), 20);
+    if (menuBarComponent)
+    {
+        menuBarComponent->menuBar.setBounds(0, 20, getWidth(), 20);
+        menuBarComponent->setBounds(0, 0, getWidth(), 24);
+    }
+
     vstComboBox.setBounds(10, 50, getWidth() - 20, 30);
-    menuBarComponent->setBounds(0, 0, getWidth(), 24);
     pluginViewport.setBounds(10, 150, getWidth() - 20, getHeight() - 150);
-    
 
     int totalWidth = 0;
     for (auto *editor : pluginEditorComponents)
@@ -120,6 +122,7 @@ void MainComponent::resized()
     pluginViewport.setViewPosition(0, 0); // Ensure the viewport starts at the top
 }
 
+// ... rest of the code ...
 
 void MainComponent::comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged)
 {
