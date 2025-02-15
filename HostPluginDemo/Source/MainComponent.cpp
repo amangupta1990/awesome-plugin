@@ -27,6 +27,7 @@ MainComponent::MainComponent()
     menuBarComponent->setMuteCallback([this](bool muted) { handleMuteEvent(muted); });
     menuBarComponent->setBypassCallback([this](bool bypassed) { handleBypassEvent(bypassed); });
     addAndMakeVisible(menuBarComponent.get());
+    menuBarComponent->setBounds(0, 20, getWidth(), 60); // Ensure the menu bar is below the status bar
 
     // Add the plugin viewport and container
     addAndMakeVisible(pluginViewport);
@@ -91,14 +92,15 @@ void MainComponent::paint(juce::Graphics &g)
 
 void MainComponent::resized()
 {
+    const int statusBarHeight = 20; // Adjust this value based on the actual status bar height
+
     if (menuBarComponent)
     {
-        menuBarComponent->menuBar.setBounds(0, 20, getWidth(), 20);
-        menuBarComponent->setBounds(0, 0, getWidth(), 24);
+        menuBarComponent->setBounds(0, statusBarHeight, getWidth(), 60); // Ensure the menu bar is below the status bar and has enough height for buttons
     }
 
-    vstComboBox.setBounds(10, 50, getWidth() - 20, 30);
-    pluginViewport.setBounds(10, 150, getWidth() - 20, getHeight() - 150);
+    vstComboBox.setBounds(10, statusBarHeight + 70, getWidth() - 20, 30);
+    pluginViewport.setBounds(10, statusBarHeight + 110, getWidth() - 20, getHeight() - (statusBarHeight + 120));
 
     int totalWidth = 0;
     for (auto *editor : pluginEditorComponents)
@@ -118,7 +120,7 @@ void MainComponent::resized()
         x += editor->getWidth() + 20; // Add uniform spacing
     }
 
-    pluginContainer.setSize(x, getHeight() - 150); // Update the container size
+    pluginContainer.setSize(x, getHeight() - (statusBarHeight + 150)); // Update the container size
     pluginViewport.setViewPosition(0, 0); // Ensure the viewport starts at the top
 }
 

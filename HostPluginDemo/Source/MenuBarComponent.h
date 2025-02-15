@@ -7,7 +7,7 @@ class MenuBarComponent : public juce::Component,
 {
 public:
     MenuBarComponent(juce::ApplicationCommandManager* commandManager, juce::AudioDeviceManager& dm)
-        : commandManager(commandManager), deviceManager(dm) // ✅ Initialize the reference properly
+        : commandManager(commandManager), deviceManager(dm) // Initialize the reference properly
     {
         setApplicationCommandManagerToWatch(commandManager);
 
@@ -21,6 +21,8 @@ public:
 
         addAndMakeVisible(menuBar);
         menuBar.setModel(this);
+        resized();
+        setBounds(0, 0, 800, 60); // Set initial bounds to ensure visibility
     }
     
     bool isMuted(){
@@ -63,19 +65,21 @@ public:
     {
         auto area = getLocalBounds();
         auto buttonWidth = 80;
-        auto buttonHeight = 20;
+        auto buttonHeight = 40;
+        auto menuBarHeight = 20;
+
+        menuBar.setBounds(area.removeFromTop(menuBarHeight));
         muteButton.setBounds(area.removeFromRight(buttonWidth).removeFromBottom(buttonHeight).reduced(5));
         bypassButton.setBounds(area.removeFromRight(buttonWidth).removeFromBottom(buttonHeight).reduced(5));
-        menuBar.setBounds(area);
     }
 
     // Menu bar related methods
-    juce::StringArray getMenuBarNames()
+    juce::StringArray getMenuBarNames() override
     {
         return {"File", "Edit", "Options"};
     }
 
-    juce::PopupMenu getMenuForIndex(int /*menuIndex*/, const juce::String &menuName)
+    juce::PopupMenu getMenuForIndex(int /*menuIndex*/, const juce::String &menuName) override
     {
         juce::PopupMenu menu;
 
@@ -102,7 +106,7 @@ public:
         return menu;
     }
 
-    void menuItemSelected(int menuItemID, int /*topLevelMenuIndex*/)
+    void menuItemSelected(int menuItemID, int /*topLevelMenuIndex*/) override
     {
         if (menuItemID >= 1000 && menuItemID < 2000)
         {
