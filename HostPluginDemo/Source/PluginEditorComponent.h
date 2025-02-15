@@ -150,31 +150,63 @@ private:
         }
     }
 
-    void exitFullscreen()
+    void PluginEditorComponent::exitFullscreen()
     {
         if (isFullscreen)
         {
             isFullscreen = false;
-
-            editor = fullScreenView->releaseEditor(); // Get editor back
+    
+            // ✅ Restore editor from FullScreenView
+            editor = fullScreenView->releaseEditor();
+    
+            if (editor)
+            {
+                editorHolder.addAndMakeVisible(editor.get());
+            }
+    
             fullScreenView->setVisible(false);
-
+    
             if (auto* topLevelComp = getTopLevelComponent())
             {
                 topLevelComp->removeChildComponent(fullScreenView.get());
             }
-
+    
+            // ✅ Restore plugin layout
             setBounds(previousBounds);
-            addAndMakeVisible(editor.get()); // Re-add editor to PluginEditorComponent
-            closeButton.setVisible(false); // Hide close button when exiting fullscreen
+            addAndMakeVisible(editorHolder);
+            addAndMakeVisible(deleteButton);
+            addAndMakeVisible(expandButton);
+            closeButton.setVisible(false);
+    
             updateEditorSize();
+    
+            // ✅ Find MainComponent and call resized()
+            juce::Component* parent = getParentComponent();
+            while (parent != nullptr)
+            {
+                if (auto* viewport = dynamic_cast<juce::Viewport*>(parent))
+                {
+                    parent = viewport->getViewedComponent(); // Go deeper inside Viewport
+                }
+                else if (auto* mainComp = dynamic_cast<MainComponent*>(parent))
+                {
+                    mainComp->resized();  // ✅ Now we force MainComponent to fix layout
+                    break;
+                }
+                else
+                {
+                    parent = parent->getParentComponent();
+                }
+            }
         }
     }
-
+    
+    
     // ✅ Ensured SVG functions are declared before use
     juce::String deleteButtonSvg() const;
     juce::String expandButtonSvg() const;
     juce::String closeButtonSvg() const;
+    
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginEditorComponent)
 };
