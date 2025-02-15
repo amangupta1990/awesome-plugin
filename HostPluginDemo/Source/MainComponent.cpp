@@ -27,7 +27,7 @@ MainComponent::MainComponent()
     menuBarComponent->setMuteCallback([this](bool muted) { handleMuteEvent(muted); });
     menuBarComponent->setBypassCallback([this](bool bypassed) { handleBypassEvent(bypassed); });
     addAndMakeVisible(menuBarComponent.get());
-    menuBarComponent->setBounds(0, 20, getWidth(), 60); // Ensure the menu bar is below the status bar
+    menuBarComponent->setBounds(0, 20, getWidth(), 60); // Shift the menu bar just below the status bar
 
     // Add the plugin viewport and container
     addAndMakeVisible(pluginViewport);
@@ -74,6 +74,7 @@ MainComponent::MainComponent()
     commandManager.registerAllCommandsForTarget(this);
     addAndMakeVisible(menuBarComponent->menuBar);
     menuBarComponent->menuBar.setModel(this);
+    menuBarComponent->menuBar.setBounds(0, 20, getWidth(), 20); // Shift the command manager just below the status bar
 }
 
 MainComponent::~MainComponent()
@@ -96,7 +97,8 @@ void MainComponent::resized()
 
     if (menuBarComponent)
     {
-        menuBarComponent->setBounds(0, statusBarHeight, getWidth(), 60); // Ensure the menu bar is below the status bar and has enough height for buttons
+        menuBarComponent->setBounds(0, statusBarHeight + 20, getWidth(), 60); // Shift the menu bar just below the status bar
+        menuBarComponent->menuBar.setBounds(0, statusBarHeight + 20, getWidth(), 20); // Shift the command manager just below the status bar
     }
 
     vstComboBox.setBounds(10, statusBarHeight + 70, getWidth() - 20, 30);
