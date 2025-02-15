@@ -9,6 +9,7 @@
 void scanForPlugins(juce::HashMap<juce::String, juce::PluginDescription>& pluginMap);
 
 class MainComponent : public juce::AudioAppComponent,
+                      public juce::ChangeListener,
                       public juce::ComboBox::Listener,
                       public juce::MenuBarModel,
                       public juce::ApplicationCommandTarget,
@@ -37,6 +38,8 @@ public:
     void getAllCommands(juce::Array<juce::CommandID> &commands) override;
     void getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo &result) override;
     bool perform(const juce::ApplicationCommandTarget::InvocationInfo &info) override;
+
+    void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
 private:
     void run() override;

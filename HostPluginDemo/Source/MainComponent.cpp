@@ -18,9 +18,42 @@ MainComponent::MainComponent()
     vstComboBox.addListener(this);
 
     // Initialize the audio device manager
-    deviceManager.initialiseWithDefaultDevices(2, 2);
+    if (juce::RuntimePermissions::isGranted(juce::RuntimePermissions::recordAudio))
+    {
+        juce::AudioDeviceManager::AudioDeviceSetup setup;
+        deviceManager.getAudioDeviceSetup(setup);
+        setup.useDefaultInputChannels = true;
+        setup.useDefaultOutputChannels = true;
+        deviceManager.setAudioDeviceSetup(setup, true);
+
+        juce::String error = deviceManager.initialiseWithDefaultDevices(2, 2);
+        if (!error.isEmpty())
+        {
+            std::cerr << "Error initializing audio device: " << error << std::endl;
+        }
+        else
+        {
+            auto* currentAudioDevice = deviceManager.getCurrentAudioDevice();
+            if (currentAudioDevice != nullptr)
+            {
+                std::cout << "Current audio device: " << currentAudioDevice->getName() << std::endl;
+            }
+            else
+            {
+                std::cerr << "No audio device found" << std::endl;
+            }
+        }
+    }
+    else
+    {
+        std::cerr << "Audio recording permission not granted" << std::endl;
+    }
+
     deviceManager.addAudioCallback(&audioProcessorPlayer);
     audioProcessorPlayer.setProcessor(&audioGraph);
+
+    // Add a listener to detect changes in audio devices
+    deviceManager.addChangeListener(this);
 
     // Initialize and add the MenuBarComponent to the component
     menuBarComponent = std::make_unique<::MenuBarComponent>(&commandManager, deviceManager);
@@ -82,6 +115,7 @@ MainComponent::~MainComponent()
     std::cout << "MainComponent Destructor" << std::endl;
     stopThread(2000); // Stop the thread with a timeout of 2 seconds
     deviceManager.removeAudioCallback(&audioProcessorPlayer);
+    deviceManager.removeChangeListener(this);
 }
 
 void MainComponent::paint(juce::Graphics &g)
@@ -317,7 +351,15 @@ void MainComponent::menuItemSelected(int menuItemID, int /*topLevelMenuIndex*/)
         auto inputDeviceName = deviceManager.getAvailableDeviceTypes()[0]->getDeviceNames(true)[inputIndex];
         auto setup = deviceManager.getAudioDeviceSetup();
         setup.inputDeviceName = inputDeviceName;
-        deviceManager.setAudioDeviceSetup(setup, true);
+        juce::String error = deviceManager.setAudioDeviceSetup(setup, true);
+        if (!error.isEmpty())
+        {
+            std::cerr << "Error setting input device: " << error << std::endl;
+        }
+        else
+        {
+            std::cout << "Input device set to: " << inputDeviceName << std::endl;
+        }
         menuBarComponent->setInputSource(inputDeviceName); // Update input source
     }
     else if (menuItemID >= 2000)
@@ -326,7 +368,15 @@ void MainComponent::menuItemSelected(int menuItemID, int /*topLevelMenuIndex*/)
         auto outputDeviceName = deviceManager.getAvailableDeviceTypes()[0]->getDeviceNames(false)[outputIndex];
         auto setup = deviceManager.getAudioDeviceSetup();
         setup.outputDeviceName = outputDeviceName;
-        deviceManager.setAudioDeviceSetup(setup, true);
+        juce::String error = deviceManager.setAudioDeviceSetup(setup, true);
+        if (!error.isEmpty())
+        {
+            std::cerr << "Error setting output device: " << error << std::endl;
+        }
+        else
+        {
+            std::cout << "Output device set to: " << outputDeviceName << std::endl;
+        }
     }
 }
 
@@ -471,4 +521,24 @@ void MainComponent::getCommandInfo(juce::CommandID /*commandID*/, juce::Applicat
 bool MainComponent::perform(const juce::ApplicationCommandTarget::InvocationInfo & /*info*/)
 {
     return false;
+}
+
+void MainComponent::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    if (source == &deviceManager)
+    {
+        // Update the menu bar with the new list of devices
+        menuBarComponent->menuBar.repaint();
+        std::cout << "Audio devices changed. Available devices:" << std::endl;
+        auto inputDevices = deviceManager.getAvailableDeviceTypes()[0]->getDeviceNames(true);
+        auto outputDevices = deviceManager.getAvailableDeviceTypes()[0]->getDeviceNames(false);
+        for (const auto& device : inputDevices)
+        {
+            std::cout << "Input device: " << device << std::endl;
+        }
+        for (const auto& device : outputDevices)
+        {
+            std::cout << "Output device: " << device << std::endl;
+        }
+    }
 }
