@@ -1,12 +1,12 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "VolumeMeter.h"
 #include "PluginEditorComponent.h"
+#include "MenuBarComponent.h"
+
 
 
 void scanForPlugins(juce::HashMap<juce::String, juce::PluginDescription>& pluginMap);
-
 
 class MainComponent : public juce::AudioAppComponent,
                       public juce::ComboBox::Listener,
@@ -46,7 +46,7 @@ private:
     void handleBypassEvent(bool bypassed);
 
     juce::ComboBox vstComboBox;
-    VolumeMeter volumeMeter;
+    std::unique_ptr<::MenuBarComponent> menuBarComponent;
     juce::Viewport pluginViewport;
     juce::Component pluginContainer;
     juce::OwnedArray<PluginEditorComponent> pluginEditorComponents;
@@ -63,7 +63,6 @@ private:
     juce::KnownPluginList pluginList;
 
     juce::ApplicationCommandManager commandManager;
-    juce::MenuBarComponent menuBar;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

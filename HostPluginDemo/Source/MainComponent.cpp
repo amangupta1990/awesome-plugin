@@ -1,5 +1,5 @@
 #include "MainComponent.h"
-#include "VolumeMeter.h"
+#include "MenuBarComponent.h"
 #include "PluginEditorComponent.h"
 #include <iostream>
 
@@ -17,14 +17,11 @@ MainComponent::MainComponent()
     addAndMakeVisible(vstComboBox);
     vstComboBox.addListener(this);
 
-    // Add the VolumeMeter to the component
-    addAndMakeVisible(volumeMeter);
-
-    // Set the callback functions for mute and bypass
-    volumeMeter.setMuteCallback([this](bool muted)
-                                { handleMuteEvent(muted); });
-    volumeMeter.setBypassCallback([this](bool bypassed)
-                                  { handleBypassEvent(bypassed); });
+    // Initialize and add the MenuBarComponent to the component
+    menuBarComponent = std::make_unique<::MenuBarComponent>(&commandManager, deviceManager);
+    menuBarComponent->setMuteCallback([this](bool muted) { handleMuteEvent(muted); });
+    menuBarComponent->setBypassCallback([this](bool bypassed) { handleBypassEvent(bypassed); });
+    addAndMakeVisible(menuBarComponent.get());
 
     // Add the plugin viewport and container
     addAndMakeVisible(pluginViewport);
@@ -74,8 +71,8 @@ MainComponent::MainComponent()
     // Add menu bar
     setApplicationCommandManagerToWatch(&commandManager);
     commandManager.registerAllCommandsForTarget(this);
-    addAndMakeVisible(menuBar);
-    menuBar.setModel(this);
+    addAndMakeVisible(menuBarComponent->menuBar);
+    menuBarComponent->menuBar.setModel(this);
 }
 
 MainComponent::~MainComponent()
@@ -95,10 +92,10 @@ void MainComponent::paint(juce::Graphics &g)
 
 void MainComponent::resized()
 {
-    menuBar.setBounds(0, 20, getWidth(), 20);
+    menuBarComponent->menuBar.setBounds(0, 20, getWidth(), 20);
     vstComboBox.setBounds(10, 50, getWidth() - 20, 30);
-    volumeMeter.setBounds(10, 90, getWidth() - 20, 60); // Adjust height to accommodate buttons
-    pluginViewport.setBounds(10, 90, getWidth() - 20, getHeight() - 150);
+    menuBarComponent->setBounds(0, 0, getWidth(), 24);
+    pluginViewport.setBounds(10, 150, getWidth() - 20, getHeight() - 150);
     
 
     int totalWidth = 0;
@@ -319,7 +316,7 @@ void MainComponent::menuItemSelected(int menuItemID, int /*topLevelMenuIndex*/)
         auto setup = deviceManager.getAudioDeviceSetup();
         setup.inputDeviceName = inputDeviceName;
         deviceManager.setAudioDeviceSetup(setup, true);
-        volumeMeter.setInputSource(inputDeviceName); // Update input source
+        menuBarComponent->setInputSource(inputDeviceName); // Update input source
     }
     else if (menuItemID >= 2000)
     {
@@ -346,7 +343,7 @@ void MainComponent::handleMuteEvent(bool muted)
     else
     {
         // Reconnect the appropriate node to the output node based on the bypass state
-        if (volumeMeter.isBypassed())
+        if (menuBarComponent->isBypassed())
         {
             audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
         }
@@ -409,7 +406,7 @@ void MainComponent::handleBypassEvent(bool bypassed)
     }
 
     // Handle mute state after bypass state change
-    handleMuteEvent(volumeMeter.isMuted());
+    handleMuteEvent(menuBarComponent->isMuted());
 }
 
 // AudioAppComponent methods
@@ -436,7 +433,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo &buffer
         }
     }
 
-    if (volumeMeter.isBypassed())
+    if (menuBarComponent->isBypassed())
     {
         // If bypassed, read from the input node directly
         juce::AudioBuffer<float> inputBuffer(bufferToFill.buffer->getNumChannels(), bufferToFill.numSamples);
@@ -445,10 +442,10 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo &buffer
         maxLevel = inputBuffer.getMagnitude(0, inputBuffer.getNumSamples());
     }
 
-    volumeMeter.setLevel(maxLevel);
+    
 
     // If muted, clear the buffer
-    if (volumeMeter.isMuted())
+    if (menuBarComponent->isMuted())
     {
         bufferToFill.clearActiveBufferRegion();
     }
