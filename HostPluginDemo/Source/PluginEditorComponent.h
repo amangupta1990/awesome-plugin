@@ -86,8 +86,8 @@ private:
         if (isFullscreen)
         {
             setBounds(0, 0, parentWidth, parentHeight);
-            editorHolder.setBounds(20, 20, parentWidth - 40, parentHeight - 80);
-            editor->setBounds(0, 0, parentWidth - 40, parentHeight - 80);
+            editorHolder.setBounds(20, 20, parentWidth, parentHeight );
+            editor->setBounds(0, 0, parentWidth - 50, parentHeight - 80);
             closeButton.setBounds(parentWidth - 50, 10, 40, 40);
             closeButton.setVisible(true);
             expandButton.setVisible(false);
@@ -105,7 +105,7 @@ private:
             int centerY = (parentHeight - newHeight - 70) / 2;
 
             setBounds(centerX, centerY, newWidth, newHeight + 70);
-            editorHolder.setBounds(0, 70, newWidth, newHeight);
+            editorHolder.setBounds(0, 50, newWidth, newHeight);
             editor->setBounds(0, 0, newWidth, newHeight);
 
             int buttonSize = 40;
