@@ -6,8 +6,8 @@
 class PluginEditorComponent : public juce::Component
 {
 public:
-    PluginEditorComponent(std::unique_ptr<juce::AudioProcessorEditor> editor, std::function<void()> onClose)
-        : editor(std::move(editor)), onClose(std::move(onClose)), isFullscreen(false)
+    PluginEditorComponent(std::unique_ptr<juce::AudioProcessorEditor> editor, std::function<void()> onClose, std::function<void()> parentResized)
+        : editor(std::move(editor)), onClose(std::move(onClose)), parentResized(std::move(parentResized)), isFullscreen(false)
     {
         jassert(this->editor != nullptr); // Ensure the editor is valid
 
@@ -66,6 +66,7 @@ private:
     std::unique_ptr<juce::AudioProcessorEditor> editor;
     juce::Component editorHolder; // Wrapper to hold the editor
     std::function<void()> onClose;
+    std::function<void()> parentResized;
     juce::DrawableButton deleteButton { "Delete", juce::DrawableButton::ButtonStyle::ImageFitted };
     juce::DrawableButton expandButton { "Expand", juce::DrawableButton::ButtonStyle::ImageFitted };
     juce::DrawableButton closeButton { "Close", juce::DrawableButton::ButtonStyle::ImageFitted };
@@ -150,67 +151,47 @@ private:
         }
     }
 
-    void PluginEditorComponent::exitFullscreen()
+    void exitFullscreen()
     {
         if (isFullscreen)
         {
             isFullscreen = false;
-    
-            // ✅ Restore editor from FullScreenView
+
+            // Restore editor from FullScreenView
             editor = fullScreenView->releaseEditor();
-    
+
             if (editor)
             {
                 editorHolder.addAndMakeVisible(editor.get());
             }
-    
+
             fullScreenView->setVisible(false);
-    
+
             if (auto* topLevelComp = getTopLevelComponent())
             {
                 topLevelComp->removeChildComponent(fullScreenView.get());
             }
-    
-            // ✅ Restore plugin layout
+
+            // Restore plugin layout
             setBounds(previousBounds);
             addAndMakeVisible(editorHolder);
             addAndMakeVisible(deleteButton);
             addAndMakeVisible(expandButton);
             closeButton.setVisible(false);
-    
+
             updateEditorSize();
-    
-            // ✅ Find MainComponent and call resized()
-            juce::Component* parent = getParentComponent();
-            while (parent != nullptr)
-            {
-                if (auto* viewport = dynamic_cast<juce::Viewport*>(parent))
-                {
-                    parent = viewport->getViewedComponent(); // Go deeper inside Viewport
-                }
-                else if (auto* mainComp = dynamic_cast<MainComponent*>(parent))
-                {
-                    mainComp->resized();  // ✅ Now we force MainComponent to fix layout
-                    break;
-                }
-                else
-                {
-                    parent = parent->getParentComponent();
-                }
-            }
+
+            parentResized();
         }
     }
-    
-    
-    // ✅ Ensured SVG functions are declared before use
+
+    // Ensure SVG functions are declared before use
     juce::String deleteButtonSvg() const;
     juce::String expandButtonSvg() const;
     juce::String closeButtonSvg() const;
-    
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginEditorComponent)
 };
-
 
 juce::String PluginEditorComponent::deleteButtonSvg() const
 {

@@ -206,7 +206,11 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
                     auto editor = pluginInstance->createEditorIfNeeded();
                     if (editor != nullptr)
                     {
-                        auto* editorComponent = new PluginEditorComponent(std::unique_ptr<juce::AudioProcessorEditor>(editor), [this, nodeId] { removePluginFromGraph(nodeId); });
+                        auto* editorComponent = new PluginEditorComponent(
+                            std::unique_ptr<juce::AudioProcessorEditor>(editor),
+                            [this, nodeId] { removePluginFromGraph(nodeId); },
+                            [this] { resized(); } // Pass a lambda that calls the resized method
+                        );
                         editorComponent->setNodeID(nodeId); // Associate the editor component with the node ID
                         pluginEditorComponents.add(editorComponent);
                         pluginContainer.addAndMakeVisible(editorComponent);
