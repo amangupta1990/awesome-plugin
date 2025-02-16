@@ -13,10 +13,6 @@ MainComponent::MainComponent()
     setSize(juce::Desktop::getInstance().getDisplays().getMainDisplay().userArea.getWidth(),
             juce::Desktop::getInstance().getDisplays().getMainDisplay().userArea.getHeight()); // Fit the entire screen
 
-    // Add the ComboBox to the component
-    addAndMakeVisible(vstComboBox);
-    vstComboBox.addListener(this);
-
     // Initialize the audio device manager
     if (juce::RuntimePermissions::isGranted(juce::RuntimePermissions::recordAudio))
     {
@@ -111,6 +107,17 @@ MainComponent::MainComponent()
 
     // Add a '+' button to open the plugin dialog at the end of the viewport
     addPluginButton.onClick = [this] { openPluginDialog(); };
+    addPluginButton.setButtonText("+");
+    addPluginButton.setSize(50, 50); // Set size for the button
+
+    auto svgData = R"(
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="20" y1="10" x2="20" y2="30" stroke="white" stroke-width="2"/>
+            <line x1="10" y1="20" x2="30" y2="20" stroke="white" stroke-width="2"/>
+        </svg>
+    )";
+    auto svgDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(svgData));
+    addPluginButton.setImages(svgDrawable.get());
 }
 
 MainComponent::~MainComponent()
@@ -132,7 +139,6 @@ void MainComponent::resized()
 {
     const int statusBarHeight = 20; // Adjust this value based on the actual status bar height
 
-    vstComboBox.setBounds(10, statusBarHeight + 90, getWidth() - 20, 30); // Adjusted to ensure it stays below the menu bar
     pluginViewport.setBounds(10, statusBarHeight + 130, getWidth() - 20, getHeight() - (statusBarHeight + 140)); // Adjusted to ensure it stays below the menu bar
 
     int totalWidth = 0;
@@ -157,22 +163,18 @@ void MainComponent::resized()
     pluginViewport.setViewPosition(0, 0); // Ensure the viewport starts at the top
 
     // Add a '+' button to open the plugin dialog at the end of the viewport
-    addPluginButton.setBounds(x, 10, 30, 30);
+    if (pluginEditorComponents.isEmpty())
+    {
+        addPluginButton.setBounds((getWidth() - addPluginButton.getWidth()) / 2, (getHeight() - addPluginButton.getHeight()) / 2, addPluginButton.getWidth(), addPluginButton.getHeight());
+    }
+    else
+    {
+        addPluginButton.setBounds(x, (getHeight() - addPluginButton.getHeight()) / 2, addPluginButton.getWidth(), addPluginButton.getHeight());
+    }
     pluginContainer.addAndMakeVisible(addPluginButton);
 }
 
 // ... rest of the code ...
-
-void MainComponent::comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged)
-{
-    std::cout << "ComboBox changed" << std::endl;
-    if (comboBoxThatHasChanged == &vstComboBox)
-    {
-        juce::String selectedPlugin = vstComboBox.getText();
-        std::cout << "Selected plugin: " << selectedPlugin << std::endl;
-        addPluginToGraph(selectedPlugin);
-    }
-}
 
 void MainComponent::openPluginDialog()
 {
@@ -344,11 +346,6 @@ void MainComponent::removePluginFromGraph(juce::AudioProcessorGraph::NodeID node
 void MainComponent::run()
 {
     scanForPlugins(pluginMap);
-    // populate the combo box with the plugin names
-    for (const auto &entry : pluginMap)
-    {
-        vstComboBox.addItem(entry.name, vstComboBox.getNumItems() + 1);
-    }
 }
 
 // Menu bar related methods

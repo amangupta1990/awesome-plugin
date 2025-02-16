@@ -12,7 +12,6 @@ void scanForPlugins(juce::HashMap<juce::String, juce::PluginDescription>& plugin
 
 class MainComponent : public juce::AudioAppComponent,
                       public juce::ChangeListener,
-                      public juce::ComboBox::Listener,
                       public juce::MenuBarModel,
                       public juce::ApplicationCommandTarget,
                       private juce::Thread
@@ -23,7 +22,7 @@ public:
 
     void paint(juce::Graphics &g) override;
     void resized() override;
-    void comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged) override;
+
 
     // Menu bar related methods
     juce::StringArray getMenuBarNames() override;
@@ -52,7 +51,7 @@ private:
     void openPluginDialog();
     
 
-    juce::ComboBox vstComboBox;
+
     std::unique_ptr<::MenuBarComponent> menuBarComponent;
     juce::Viewport pluginViewport;
     juce::Component pluginContainer;
@@ -65,7 +64,7 @@ private:
     juce::AudioProcessorGraph::Node::Ptr inputNode; // Declare inputNode
     juce::AudioProcessorGraph::Node::Ptr pluginNode;
     juce::AudioProcessorGraph::Node::Ptr outputNode;
-    juce::TextButton addPluginButton { "+" };
+    juce::DrawableButton addPluginButton { "Add", juce::DrawableButton::ButtonStyle::ImageFitted };
 
     juce::HashMap<juce::String, juce::PluginDescription> pluginMap;
     juce::KnownPluginList pluginList;
