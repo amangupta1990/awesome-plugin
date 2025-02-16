@@ -111,10 +111,10 @@ MainComponent::MainComponent()
     addPluginButton.setSize(50, 50); // Set size for the button
 
     auto svgData = R"(
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <line x1="20" y1="10" x2="20" y2="30" stroke="white" stroke-width="2"/>
-            <line x1="10" y1="20" x2="30" y2="20" stroke="white" stroke-width="2"/>
-        </svg>
+<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M7 1V13M1 7H13" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
     )";
     auto svgDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(svgData));
     addPluginButton.setImages(svgDrawable.get());
@@ -159,19 +159,22 @@ void MainComponent::resized()
         x += editor->getWidth() + 20; // Add uniform spacing
     }
 
-    pluginContainer.setSize(x + 40, getHeight() - (statusBarHeight + 150)); // Update the container size
+    pluginContainer.setSize(x + 60, getHeight() - (statusBarHeight)); // Update the container size
     pluginViewport.setViewPosition(0, 0); // Ensure the viewport starts at the top
 
     // Add a '+' button to open the plugin dialog at the end of the viewport
     if (pluginEditorComponents.isEmpty())
     {
-        addPluginButton.setBounds((getWidth() - addPluginButton.getWidth()) / 2, (getHeight() - addPluginButton.getHeight() - statusBarHeight) / 2, addPluginButton.getWidth(), addPluginButton.getHeight());
+        addPluginButton.setBounds((getWidth() - addPluginButton.getWidth()) / 2, (getHeight()/2 - addPluginButton.getHeight()/2), addPluginButton.getWidth(), addPluginButton.getHeight());
+      
     }
     else
     {
         addPluginButton.setBounds(x, pluginViewport.getHeight() /2 - addPluginButton.getHeight()/2 -statusBarHeight, addPluginButton.getWidth(), addPluginButton.getHeight());
+        
     }
     pluginContainer.addAndMakeVisible(addPluginButton);
+    
 }
 
 // ... rest of the code ...

@@ -109,11 +109,11 @@ private:
             editorHolder.setBounds(0, 50, newWidth, newHeight);
             editor->setBounds(0, 0, newWidth, newHeight);
 
-            int buttonSize = 40;
+            int buttonSize = 30;
             int buttonX = (newWidth - 90) / 2;
 
-            deleteButton.setBounds(buttonX, 10, buttonSize, buttonSize);
-            expandButton.setBounds(buttonX + buttonSize + 15, 10, buttonSize, buttonSize);
+            deleteButton.setBounds(buttonX, 0, buttonSize, buttonSize);
+            expandButton.setBounds(buttonX + buttonSize + 20, 0, buttonSize, buttonSize);
             closeButton.setVisible(false);
             expandButton.setVisible(true);
             deleteButton.setVisible(true);
