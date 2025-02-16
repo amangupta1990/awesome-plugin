@@ -153,7 +153,7 @@ void MainComponent::resized()
     for (auto *editor : pluginEditorComponents)
     {
         int editorHeight = editor->getHeight();
-        int y = (getHeight() - editorHeight) / 2; // Center align vertically
+        int y = pluginViewport.getHeight() / 2 - editorHeight / 2 - statusBarHeight; // Center the editor vertically
 
         editor->setBounds(x, y, editor->getWidth(), editorHeight);
         x += editor->getWidth() + 20; // Add uniform spacing
@@ -165,11 +165,11 @@ void MainComponent::resized()
     // Add a '+' button to open the plugin dialog at the end of the viewport
     if (pluginEditorComponents.isEmpty())
     {
-        addPluginButton.setBounds((getWidth() - addPluginButton.getWidth()) / 2, (getHeight() - addPluginButton.getHeight()) / 2, addPluginButton.getWidth(), addPluginButton.getHeight());
+        addPluginButton.setBounds((getWidth() - addPluginButton.getWidth()) / 2, (getHeight() - addPluginButton.getHeight() - statusBarHeight) / 2, addPluginButton.getWidth(), addPluginButton.getHeight());
     }
     else
     {
-        addPluginButton.setBounds(x, (getHeight() - addPluginButton.getHeight()) / 2, addPluginButton.getWidth(), addPluginButton.getHeight());
+        addPluginButton.setBounds(x, pluginViewport.getHeight() /2 - addPluginButton.getHeight()/2 -statusBarHeight, addPluginButton.getWidth(), addPluginButton.getHeight());
     }
     pluginContainer.addAndMakeVisible(addPluginButton);
 }
