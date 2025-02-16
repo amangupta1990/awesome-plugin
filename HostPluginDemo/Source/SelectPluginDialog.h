@@ -36,14 +36,8 @@ public:
         closeButton.addListener(this);
         addAndMakeVisible(closeButton);
 
-        // Overlay
-        overlay.setOpaque(true);
-        overlay.setColour(juce::Label::backgroundColourId, juce::Colours::black.withAlpha(0.5f));
-        addAndMakeVisible(overlay);
-
         // Populate the table with the plugin map
         setPluginList(pluginMap);
-      
     }
 
     ~SelectPluginDialog() override
@@ -59,12 +53,13 @@ public:
 
     void resized() override
     {
-        auto area = getTopLevelComponent()->getBounds();
+        auto area = getLocalBounds().reduced(10);
         titleLabel.setBounds(area.removeFromTop(40));
-        pluginTable.setBounds(area.removeFromTop(getHeight() - 100).reduced(10));
-        addButton.setBounds(area.removeFromBottom(40).reduced(10));
-        closeButton.setBounds(area.removeFromBottom(40).reduced(10));
-        overlay.setBounds(getTopLevelComponent()->getBounds());
+        pluginTable.setBounds(area.removeFromTop(area.getHeight() - 50));
+        auto buttonArea = area.removeFromBottom(40);
+        addButton.setBounds(buttonArea.removeFromLeft(buttonArea.getWidth() / 2).reduced(5));
+        closeButton.setBounds(buttonArea.reduced(5));
+        overlay.setBounds(getLocalBounds());
     }
 
     void buttonClicked(juce::Button* button) override
@@ -75,11 +70,12 @@ public:
             if (onPluginSelected && !selectedPlugin.isEmpty())
             {
                 onPluginSelected(selectedPlugin);
+                getTopLevelComponent()->setVisible(false); // Close the dialog
             }
         }
         else if (button == &closeButton)
         {
-            setVisible(false);
+            getTopLevelComponent()->setVisible(false); // Close the dialog
         }
     }
 

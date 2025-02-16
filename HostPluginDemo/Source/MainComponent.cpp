@@ -178,12 +178,6 @@ void MainComponent::openPluginDialog()
 {
     if (pluginDialogWindow == nullptr)
     {
-        // Ensure the pluginMap is populated before opening the dialog
-//        if (pluginMap.isEmpty())
-//        {
-//            scanForPlugins(pluginMap);
-//        }
-
         // Create the dialog window
         pluginDialogWindow = std::make_unique<PluginDialogWindow>(
             "Select Plugin",
@@ -192,8 +186,6 @@ void MainComponent::openPluginDialog()
         );
 
         // Ensure it is visible and on top
-        // Add it to the UI hierarchy
-        addAndMakeVisible(*pluginDialogWindow);
         pluginDialogWindow->setAlwaysOnTop(true);
         pluginDialogWindow->toFront(true);
     }
@@ -203,8 +195,6 @@ void MainComponent::openPluginDialog()
         pluginDialogWindow->toFront(true);
     }
 }
-
-
 
 // Add a member variable to manage the dialog's lifecycle
 std::unique_ptr<SelectPluginDialog> pluginDialog;
@@ -279,6 +269,12 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
                 {
                     std::cout << "Failed to create plugin instance: " << error << std::endl;
                 } });
+
+            // Close the dialog after adding the plugin
+            if (pluginDialogWindow != nullptr)
+            {
+                pluginDialogWindow->setVisible(false);
+            }
         }
         else
         {
