@@ -35,13 +35,9 @@ public:
         closeButton.addListener(this);
         addAndMakeVisible(closeButton);
 
-        // Overlay
-        overlay.setOpaque(true);
-        overlay.setColour(juce::Label::backgroundColourId, juce::Colours::black.withAlpha(0.5f));
-        addAndMakeVisible(overlay);
-
         // Populate the table with the plugin map
         setPluginList(pluginMap);
+        resized();
     }
 
     ~SelectPluginDialog() override
@@ -57,13 +53,20 @@ public:
 
     void resized() override
     {
-        auto area = getLocalBounds();
+        auto area = getLocalBounds(); // ✅ Fix: Use local bounds
+    
         titleLabel.setBounds(area.removeFromTop(40));
+    
         pluginTable.setBounds(area.removeFromTop(getHeight() - 100).reduced(10));
-        addButton.setBounds(area.removeFromBottom(40).reduced(10));
-        closeButton.setBounds(area.removeFromBottom(40).reduced(10));
-        overlay.setBounds(getLocalBounds());
+    
+        auto buttonArea = area.removeFromBottom(40).reduced(10);
+        addButton.setBounds(buttonArea.removeFromLeft(buttonArea.getWidth() / 2 - 5));
+        closeButton.setBounds(buttonArea);
+    
+        std::cout << "Resized SelectPluginDialog. Plugin table size: " 
+                  << pluginTable.getBounds().toString() << std::endl;
     }
+    
 
     void buttonClicked(juce::Button* button) override
     {
@@ -143,7 +146,6 @@ private:
     juce::TableListBox pluginTable;
     juce::TextButton addButton;
     juce::TextButton closeButton;
-    juce::Component overlay;
 
     juce::Array<PluginInfo> plugins;
     PluginSelectedCallback onPluginSelected;

@@ -27,6 +27,7 @@ setVisible(true);
 toFront(true);
 
 std::cout << "PluginDialogWindow should now be visible with correct size" << std::endl;
+setTitle(name);
 }
 
 

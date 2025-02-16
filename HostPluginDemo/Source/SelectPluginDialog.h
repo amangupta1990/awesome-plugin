@@ -17,6 +17,7 @@ public:
         std::cout << "SelectPluginDialog constructor called" << std::endl;
         titleLabel.setText("Select a VST Plugin", juce::dontSendNotification);
         titleLabel.setJustificationType(juce::Justification::centred);
+        titleLabel.setColour(juce::Label::textColourId, juce::Colours::white); // Set text color to white
         addAndMakeVisible(titleLabel);
 
         // Plugin Table
@@ -48,7 +49,7 @@ public:
 
     void paint(juce::Graphics& g) override
     {
-        g.fillAll(juce::Colours::white);
+        g.fillAll(juce::Colours::darkgrey); // Set dark grey background color
     }
 
     void resized() override
