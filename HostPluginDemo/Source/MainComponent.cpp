@@ -108,6 +108,9 @@ MainComponent::MainComponent()
     addAndMakeVisible(menuBarComponent->menuBar);
     menuBarComponent->menuBar.setModel(this);
     menuBarComponent->menuBar.setBounds(0, 20, getWidth(), 20); // Shift the command manager just below the status bar
+
+    // Add a '+' button to open the plugin dialog at the end of the viewport
+    addPluginButton.onClick = [this] { openPluginDialog(); };
 }
 
 MainComponent::~MainComponent()
@@ -128,7 +131,6 @@ void MainComponent::paint(juce::Graphics &g)
 void MainComponent::resized()
 {
     const int statusBarHeight = 20; // Adjust this value based on the actual status bar height
-
 
     vstComboBox.setBounds(10, statusBarHeight + 90, getWidth() - 20, 30); // Adjusted to ensure it stays below the menu bar
     pluginViewport.setBounds(10, statusBarHeight + 130, getWidth() - 20, getHeight() - (statusBarHeight + 140)); // Adjusted to ensure it stays below the menu bar
@@ -151,8 +153,12 @@ void MainComponent::resized()
         x += editor->getWidth() + 20; // Add uniform spacing
     }
 
-    pluginContainer.setSize(x, getHeight() - (statusBarHeight + 150)); // Update the container size
+    pluginContainer.setSize(x + 40, getHeight() - (statusBarHeight + 150)); // Update the container size
     pluginViewport.setViewPosition(0, 0); // Ensure the viewport starts at the top
+
+    // Add a '+' button to open the plugin dialog at the end of the viewport
+    addPluginButton.setBounds(x, 10, 30, 30);
+    pluginContainer.addAndMakeVisible(addPluginButton);
 }
 
 // ... rest of the code ...
@@ -167,6 +173,41 @@ void MainComponent::comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged)
         addPluginToGraph(selectedPlugin);
     }
 }
+
+void MainComponent::openPluginDialog()
+{
+    if (pluginDialogWindow == nullptr)
+    {
+        // Ensure the pluginMap is populated before opening the dialog
+//        if (pluginMap.isEmpty())
+//        {
+//            scanForPlugins(pluginMap);
+//        }
+
+        // Create the dialog window
+        pluginDialogWindow = std::make_unique<PluginDialogWindow>(
+            "Select Plugin",
+            pluginMap,
+            [this](const juce::String& pluginName) { addPluginToGraph(pluginName); }
+        );
+
+        // Ensure it is visible and on top
+        // Add it to the UI hierarchy
+        addAndMakeVisible(*pluginDialogWindow);
+        pluginDialogWindow->setAlwaysOnTop(true);
+        pluginDialogWindow->toFront(true);
+    }
+    else
+    {
+        pluginDialogWindow->setVisible(true); // Reuse existing dialog
+        pluginDialogWindow->toFront(true);
+    }
+}
+
+
+
+// Add a member variable to manage the dialog's lifecycle
+std::unique_ptr<SelectPluginDialog> pluginDialog;
 
 void MainComponent::addPluginToGraph(const juce::String &pluginName)
 {

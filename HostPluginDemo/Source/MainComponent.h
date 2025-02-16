@@ -3,6 +3,8 @@
 #include <JuceHeader.h>
 #include "PluginEditorComponent.h"
 #include "MenuBarComponent.h"
+#include "SelectPluginDialog.h"
+#include "PluginDialogWindow.h"
 
 
 
@@ -47,6 +49,8 @@ private:
     void removePluginFromGraph(juce::AudioProcessorGraph::NodeID nodeId);
     void handleMuteEvent(bool muted);
     void handleBypassEvent(bool bypassed);
+    void openPluginDialog();
+    
 
     juce::ComboBox vstComboBox;
     std::unique_ptr<::MenuBarComponent> menuBarComponent;
@@ -61,11 +65,15 @@ private:
     juce::AudioProcessorGraph::Node::Ptr inputNode; // Declare inputNode
     juce::AudioProcessorGraph::Node::Ptr pluginNode;
     juce::AudioProcessorGraph::Node::Ptr outputNode;
+    juce::TextButton addPluginButton { "+" };
 
     juce::HashMap<juce::String, juce::PluginDescription> pluginMap;
     juce::KnownPluginList pluginList;
 
     juce::ApplicationCommandManager commandManager;
+
+    std::unique_ptr<SelectPluginDialog> pluginDialog;
+    std::unique_ptr<PluginDialogWindow> pluginDialogWindow;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };
