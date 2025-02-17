@@ -88,6 +88,7 @@ MainComponent::MainComponent()
     {
         std::cout << "Input and output nodes added to the audio graph" << std::endl;
         audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
+        audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
         std::cout << "Connection between input and output nodes established" << std::endl;
     }
     else
@@ -271,7 +272,7 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
 
                     // Connect this plugin to the output node
                     audioGraph.addConnection({{nodeId, 0}, {outputNode->nodeID, 0}});
-                    audioGraph.addConnection({{nodeId, 1}, {outputNode->nodeID, 1}});
+                    audioGraph.addConnection({{nodeId, 0}, {outputNode->nodeID, 1}}); // Ensure plugin is heard on both channels
                 }
                 else
                 {
@@ -321,7 +322,7 @@ void MainComponent::removePluginFromGraph(juce::AudioProcessorGraph::NodeID node
         {
             // No plugins left, connect input node to output node
             audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
-            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
+            audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
         }
         else
         {
@@ -345,7 +346,7 @@ void MainComponent::removePluginFromGraph(juce::AudioProcessorGraph::NodeID node
 
                 // Connect this plugin to the output node
                 audioGraph.addConnection({{currentPluginNodeID, 0}, {outputNode->nodeID, 0}});
-                audioGraph.addConnection({{currentPluginNodeID, 1}, {outputNode->nodeID, 1}});
+                audioGraph.addConnection({{currentPluginNodeID, 0}, {outputNode->nodeID, 1}}); // Ensure plugin is heard on both channels
             }
         }
 
@@ -448,7 +449,7 @@ void MainComponent::handleMuteEvent(bool muted)
         if (menuBarComponent->isBypassed())
         {
             audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
-            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
+            audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
         }
         else if (!pluginEditorComponents.isEmpty())
         {
@@ -459,7 +460,7 @@ void MainComponent::handleMuteEvent(bool muted)
         else
         {
             audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
-            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
+            audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
         }
     }
 }
@@ -480,7 +481,7 @@ void MainComponent::handleBypassEvent(bool bypassed)
 
         // Connect the input node directly to the output node
         audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
-        audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
+        audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
     }
     else
     {
@@ -507,13 +508,13 @@ void MainComponent::handleBypassEvent(bool bypassed)
             // Connect the last plugin to the output node
             auto lastPluginNodeID = pluginEditorComponents.getLast()->getNodeID();
             audioGraph.addConnection({{lastPluginNodeID, 0}, {outputNode->nodeID, 0}});
-            audioGraph.addConnection({{lastPluginNodeID, 1}, {outputNode->nodeID, 1}});
+            audioGraph.addConnection({{lastPluginNodeID, 0}, {outputNode->nodeID, 1}}); // Ensure plugin is heard on both channels
         }
         else
         {
             // If no plugins are present, connect the input node to the output node
             audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
-            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
+            audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
         }
     }
 
