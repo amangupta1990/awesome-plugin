@@ -7,26 +7,26 @@ class MenuBarComponent : public juce::Component,
                          public juce::MenuBarModel
 {
 public:
-MenuBarComponent(juce::ApplicationCommandManager* commandManager, juce::AudioDeviceManager& dm)
-    : commandManager(commandManager), deviceManager(dm) // Initialize the reference properly
-{
-    setApplicationCommandManagerToWatch(commandManager);
+    MenuBarComponent(juce::ApplicationCommandManager* commandManager, juce::AudioDeviceManager& dm)
+        : commandManager(commandManager), deviceManager(dm) // Initialize the reference properly
+    {
+        setApplicationCommandManagerToWatch(commandManager);
 
-    addAndMakeVisible(muteButton);
-    muteButton.onClick = [this] { toggleMute(); };
-    updateMuteButton();
+        addAndMakeVisible(muteButton);
+        muteButton.onClick = [this] { toggleMute(); };
+        updateMuteButton();
 
-    addAndMakeVisible(bypassButton);
-    bypassButton.onClick = [this] { toggleBypass(); };
-    updateBypassButton();
+        addAndMakeVisible(bypassButton);
+        bypassButton.onClick = [this] { toggleBypass(); };
+        updateBypassButton();
 
-    addAndMakeVisible(menuBar);
-    menuBar.setModel(this);
+        addAndMakeVisible(menuBar);
+        menuBar.setModel(this);
 
-    // Ensure buttons are in front
-    muteButton.toFront(true);
-    bypassButton.toFront(true);
-}
+        // Ensure buttons are in front
+        muteButton.toFront(true);
+        bypassButton.toFront(true);
+    }
 
     bool isMuted(){
         return muted;
@@ -69,20 +69,19 @@ MenuBarComponent(juce::ApplicationCommandManager* commandManager, juce::AudioDev
         g.fillAll(juce::Colours::darkgrey); // Set dark grey background color
     }
 
-    void resized()
+    void resized() override
     {
         auto area = getLocalBounds();
         auto buttonWidth = 160; // 2X bigger
         auto buttonHeight = 80; // 2X bigger
         auto menuBarHeight = 20;
-    
+
         menuBar.setBounds(area.removeFromTop(menuBarHeight));
-        auto byPassbuttonArea = area.reduced(5);
-        auto muteButtonArea = area.reduced(6);
-        auto centerX = byPassbuttonArea.getCentreX();
-        muteButton.setBounds(centerX - buttonWidth - 10, muteButtonArea.getY(), buttonWidth-10, buttonHeight-10);
-        bypassButton.setBounds(centerX + 10, byPassbuttonArea.getY(), buttonWidth, buttonHeight);
-    
+        auto buttonArea = area.reduced(5);
+        auto centerX = buttonArea.getCentreX();
+        muteButton.setBounds(centerX - buttonWidth - 10, buttonArea.getY(), buttonWidth, buttonHeight);
+        bypassButton.setBounds(centerX + 10, buttonArea.getY(), buttonWidth, buttonHeight);
+
         // Debug statements
         std::cout << "MenuBar bounds: " << menuBar.getBounds().toString() << std::endl;
         std::cout << "MuteButton bounds: " << muteButton.getBounds().toString() << std::endl;

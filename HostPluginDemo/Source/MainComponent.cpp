@@ -257,17 +257,21 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
                     {
                         // First plugin, connect input node to this plugin
                         audioGraph.removeConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
+                        audioGraph.removeConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
                         audioGraph.addConnection({{inputNode->nodeID, 0}, {nodeId, 0}});
+                        audioGraph.addConnection({{inputNode->nodeID, 1}, {nodeId, 1}});
                     }
                     else
                     {
                         // Connect the previous plugin to this plugin
                         auto previousPluginNodeID = pluginEditorComponents[pluginEditorComponents.size() - 2]->getNodeID();
                         audioGraph.addConnection({{previousPluginNodeID, 0}, {nodeId, 0}});
+                        audioGraph.addConnection({{previousPluginNodeID, 1}, {nodeId, 1}});
                     }
 
                     // Connect this plugin to the output node
                     audioGraph.addConnection({{nodeId, 0}, {outputNode->nodeID, 0}});
+                    audioGraph.addConnection({{nodeId, 1}, {outputNode->nodeID, 1}});
                 }
                 else
                 {
@@ -317,6 +321,7 @@ void MainComponent::removePluginFromGraph(juce::AudioProcessorGraph::NodeID node
         {
             // No plugins left, connect input node to output node
             audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
+            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
         }
         else
         {
@@ -328,16 +333,19 @@ void MainComponent::removePluginFromGraph(juce::AudioProcessorGraph::NodeID node
                 {
                     // First plugin, connect input node to this plugin
                     audioGraph.addConnection({{inputNode->nodeID, 0}, {currentPluginNodeID, 0}});
+                    audioGraph.addConnection({{inputNode->nodeID, 1}, {currentPluginNodeID, 1}});
                 }
                 else
                 {
                     // Connect the previous plugin to this plugin
                     auto previousPluginNodeID = pluginEditorComponents[i - 1]->getNodeID();
                     audioGraph.addConnection({{previousPluginNodeID, 0}, {currentPluginNodeID, 0}});
+                    audioGraph.addConnection({{previousPluginNodeID, 1}, {currentPluginNodeID, 1}});
                 }
 
                 // Connect this plugin to the output node
                 audioGraph.addConnection({{currentPluginNodeID, 0}, {outputNode->nodeID, 0}});
+                audioGraph.addConnection({{currentPluginNodeID, 1}, {outputNode->nodeID, 1}});
             }
         }
 
@@ -427,9 +435,11 @@ void MainComponent::handleMuteEvent(bool muted)
     {
         // Remove the connection to the output node
         audioGraph.removeConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
+        audioGraph.removeConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
         for (auto *editor : pluginEditorComponents)
         {
             audioGraph.removeConnection({{editor->getNodeID(), 0}, {outputNode->nodeID, 0}});
+            audioGraph.removeConnection({{editor->getNodeID(), 1}, {outputNode->nodeID, 1}});
         }
     }
     else
@@ -438,19 +448,21 @@ void MainComponent::handleMuteEvent(bool muted)
         if (menuBarComponent->isBypassed())
         {
             audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
+            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
         }
         else if (!pluginEditorComponents.isEmpty())
         {
             auto lastPluginNodeID = pluginEditorComponents.getLast()->getNodeID();
             audioGraph.addConnection({{lastPluginNodeID, 0}, {outputNode->nodeID, 0}});
+            audioGraph.addConnection({{lastPluginNodeID, 1}, {outputNode->nodeID, 1}});
         }
         else
         {
             audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
+            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
         }
     }
 }
-
 void MainComponent::handleBypassEvent(bool bypassed)
 {
     std::cout << "Bypass event: " << bypassed << std::endl;
@@ -461,22 +473,27 @@ void MainComponent::handleBypassEvent(bool bypassed)
         for (auto *editor : pluginEditorComponents)
         {
             audioGraph.removeConnection({{inputNode->nodeID, 0}, {editor->getNodeID(), 0}});
+            audioGraph.removeConnection({{inputNode->nodeID, 1}, {editor->getNodeID(), 1}});
             audioGraph.removeConnection({{editor->getNodeID(), 0}, {outputNode->nodeID, 0}});
+            audioGraph.removeConnection({{editor->getNodeID(), 1}, {outputNode->nodeID, 1}});
         }
 
         // Connect the input node directly to the output node
         audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
+        audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
     }
     else
     {
         // Remove the direct connection from the input node to the output node
         audioGraph.removeConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
+        audioGraph.removeConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
 
         // Reconnect the input node to the first plugin in the chain
         if (!pluginEditorComponents.isEmpty())
         {
             auto firstPluginNodeID = pluginEditorComponents.getFirst()->getNodeID();
             audioGraph.addConnection({{inputNode->nodeID, 0}, {firstPluginNodeID, 0}});
+            audioGraph.addConnection({{inputNode->nodeID, 1}, {firstPluginNodeID, 1}});
 
             // Connect each plugin to the next one in the chain
             for (int i = 1; i < pluginEditorComponents.size(); ++i)
@@ -484,16 +501,19 @@ void MainComponent::handleBypassEvent(bool bypassed)
                 auto previousPluginNodeID = pluginEditorComponents[i - 1]->getNodeID();
                 auto currentPluginNodeID = pluginEditorComponents[i]->getNodeID();
                 audioGraph.addConnection({{previousPluginNodeID, 0}, {currentPluginNodeID, 0}});
+                audioGraph.addConnection({{previousPluginNodeID, 1}, {currentPluginNodeID, 1}});
             }
 
             // Connect the last plugin to the output node
             auto lastPluginNodeID = pluginEditorComponents.getLast()->getNodeID();
             audioGraph.addConnection({{lastPluginNodeID, 0}, {outputNode->nodeID, 0}});
+            audioGraph.addConnection({{lastPluginNodeID, 1}, {outputNode->nodeID, 1}});
         }
         else
         {
             // If no plugins are present, connect the input node to the output node
             audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
+            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
         }
     }
 
@@ -532,9 +552,23 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo &buffer
         juce::MidiBuffer midiBuffer; // Create a MidiBuffer object
         inputNode->getProcessor()->processBlock(inputBuffer, midiBuffer);
         maxLevel = inputBuffer.getMagnitude(0, inputBuffer.getNumSamples());
-    }
 
-    
+        // Mix input channels and copy to both output channels
+        for (int sample = 0; sample < bufferToFill.numSamples; ++sample)
+        {
+            float mixedSample = 0.0f;
+            for (int channel = 0; channel < inputBuffer.getNumChannels(); ++channel)
+            {
+                mixedSample += inputBuffer.getSample(channel, sample);
+            }
+            mixedSample /= inputBuffer.getNumChannels(); // Average the mixed sample
+
+            for (int channel = 0; channel < bufferToFill.buffer->getNumChannels(); ++channel)
+            {
+                bufferToFill.buffer->setSample(channel, bufferToFill.startSample + sample, mixedSample);
+            }
+        }
+    }
 
     // If muted, clear the buffer
     if (menuBarComponent->isMuted())
