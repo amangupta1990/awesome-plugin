@@ -261,6 +261,8 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
                         audioGraph.removeConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
                         audioGraph.addConnection({{inputNode->nodeID, 0}, {nodeId, 0}});
                         audioGraph.addConnection({{inputNode->nodeID, 1}, {nodeId, 1}});
+                        audioGraph.addConnection({{inputNode->nodeID, 0}, {nodeId, 1}});
+                        audioGraph.addConnection({{inputNode->nodeID, 1}, {nodeId, 0}});
                     }
                     else
                     {
@@ -268,11 +270,15 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
                         auto previousPluginNodeID = pluginEditorComponents[pluginEditorComponents.size() - 2]->getNodeID();
                         audioGraph.addConnection({{previousPluginNodeID, 0}, {nodeId, 0}});
                         audioGraph.addConnection({{previousPluginNodeID, 1}, {nodeId, 1}});
+                        audioGraph.addConnection({{previousPluginNodeID, 0}, {nodeId, 1}});
+                        audioGraph.addConnection({{previousPluginNodeID, 1}, {nodeId, 0}});
                     }
 
                     // Connect this plugin to the output node
                     audioGraph.addConnection({{nodeId, 0}, {outputNode->nodeID, 0}});
                     audioGraph.addConnection({{nodeId, 0}, {outputNode->nodeID, 1}}); // Ensure plugin is heard on both channels
+                    audioGraph.addConnection({{nodeId, 0}, {outputNode->nodeID, 1}});
+                    audioGraph.addConnection({{nodeId, 0}, {outputNode->nodeID, 0}});
                 }
                 else
                 {
@@ -323,6 +329,8 @@ void MainComponent::removePluginFromGraph(juce::AudioProcessorGraph::NodeID node
             // No plugins left, connect input node to output node
             audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
             audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
+            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
+            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 0}}); // Ensure input is heard on both channels
         }
         else
         {
@@ -335,6 +343,8 @@ void MainComponent::removePluginFromGraph(juce::AudioProcessorGraph::NodeID node
                     // First plugin, connect input node to this plugin
                     audioGraph.addConnection({{inputNode->nodeID, 0}, {currentPluginNodeID, 0}});
                     audioGraph.addConnection({{inputNode->nodeID, 1}, {currentPluginNodeID, 1}});
+                    audioGraph.addConnection({{inputNode->nodeID, 0}, {currentPluginNodeID, 1}});
+                    audioGraph.addConnection({{inputNode->nodeID, 1}, {currentPluginNodeID, 0}});
                 }
                 else
                 {
@@ -342,11 +352,15 @@ void MainComponent::removePluginFromGraph(juce::AudioProcessorGraph::NodeID node
                     auto previousPluginNodeID = pluginEditorComponents[i - 1]->getNodeID();
                     audioGraph.addConnection({{previousPluginNodeID, 0}, {currentPluginNodeID, 0}});
                     audioGraph.addConnection({{previousPluginNodeID, 1}, {currentPluginNodeID, 1}});
+                    audioGraph.addConnection({{previousPluginNodeID, 0}, {currentPluginNodeID, 1}});
+                    audioGraph.addConnection({{previousPluginNodeID, 1}, {currentPluginNodeID, 0}});
                 }
 
                 // Connect this plugin to the output node
                 audioGraph.addConnection({{currentPluginNodeID, 0}, {outputNode->nodeID, 0}});
                 audioGraph.addConnection({{currentPluginNodeID, 0}, {outputNode->nodeID, 1}}); // Ensure plugin is heard on both channels
+                audioGraph.addConnection({{currentPluginNodeID, 1}, {outputNode->nodeID, 1}});
+                audioGraph.addConnection({{currentPluginNodeID, 1}, {outputNode->nodeID, 0}}); // Ensure plugin is heard on both channels
             }
         }
 
@@ -441,6 +455,8 @@ void MainComponent::handleMuteEvent(bool muted)
         {
             audioGraph.removeConnection({{editor->getNodeID(), 0}, {outputNode->nodeID, 0}});
             audioGraph.removeConnection({{editor->getNodeID(), 0}, {outputNode->nodeID, 1}});
+            audioGraph.removeConnection({{editor->getNodeID(), 1}, {outputNode->nodeID, 1}});
+            audioGraph.removeConnection({{editor->getNodeID(), 1}, {outputNode->nodeID, 0}});
         }
     }
     else
@@ -449,18 +465,24 @@ void MainComponent::handleMuteEvent(bool muted)
         if (menuBarComponent->isBypassed())
         {
             audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
-            audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
+            audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 1}});
+            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
+            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
         }
         else if (!pluginEditorComponents.isEmpty())
         {
             auto lastPluginNodeID = pluginEditorComponents.getLast()->getNodeID();
             audioGraph.addConnection({{lastPluginNodeID, 0}, {outputNode->nodeID, 0}});
             audioGraph.addConnection({{lastPluginNodeID, 0}, {outputNode->nodeID, 1}});
+            audioGraph.addConnection({{lastPluginNodeID, 1}, {outputNode->nodeID, 0}});
+            audioGraph.addConnection({{lastPluginNodeID, 1}, {outputNode->nodeID, 1}});
         }
         else
         {
             audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
             audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
+            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 0}});
+            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
         }
     }
 }
@@ -468,59 +490,80 @@ void MainComponent::handleBypassEvent(bool bypassed)
 {
     std::cout << "Bypass event: " << bypassed << std::endl;
 
+    if (inputNode == nullptr || outputNode == nullptr)
+    {
+        std::cerr << "Error: Input or Output node is missing!" << std::endl;
+        return;
+    }
+
+    // Remove all current connections
+    auto connections = audioGraph.getConnections();
+    for (const auto& connection : connections)
+    {
+        audioGraph.removeConnection(connection);
+    }
+
     if (bypassed)
     {
-        // Remove all connections from the input node to the plugins
-        for (auto *editor : pluginEditorComponents)
-        {
-            audioGraph.removeConnection({{inputNode->nodeID, 0}, {editor->getNodeID(), 0}});
-            audioGraph.removeConnection({{inputNode->nodeID, 1}, {editor->getNodeID(), 1}});
-            audioGraph.removeConnection({{editor->getNodeID(), 0}, {outputNode->nodeID, 0}});
-            audioGraph.removeConnection({{editor->getNodeID(), 1}, {outputNode->nodeID, 1}});
-        }
+        std::cout << "Bypassing plugins - Routing Dry Input to Stereo Output" << std::endl;
 
-        // Connect the input node directly to the output node
+        // Ensure both input channels are routed equally to both output channels
         audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
-        audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
+        audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
+        audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 1}});
+        audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 0}});
     }
     else
     {
-        // Remove the direct connection from the input node to the output node
-        audioGraph.removeConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
-        audioGraph.removeConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
+        std::cout << "Re-enabling plugins - Restoring processing chain" << std::endl;
 
-        // Reconnect the input node to the first plugin in the chain
         if (!pluginEditorComponents.isEmpty())
         {
             auto firstPluginNodeID = pluginEditorComponents.getFirst()->getNodeID();
+
+            // Connect input node to first plugin node
             audioGraph.addConnection({{inputNode->nodeID, 0}, {firstPluginNodeID, 0}});
             audioGraph.addConnection({{inputNode->nodeID, 1}, {firstPluginNodeID, 1}});
+            audioGraph.addConnection({{inputNode->nodeID, 0}, {firstPluginNodeID, 1}});
+            audioGraph.addConnection({{inputNode->nodeID, 1}, {firstPluginNodeID, 0}});
 
-            // Connect each plugin to the next one in the chain
+            // Connect each plugin in sequence
             for (int i = 1; i < pluginEditorComponents.size(); ++i)
             {
-                auto previousPluginNodeID = pluginEditorComponents[i - 1]->getNodeID();
-                auto currentPluginNodeID = pluginEditorComponents[i]->getNodeID();
-                audioGraph.addConnection({{previousPluginNodeID, 0}, {currentPluginNodeID, 0}});
-                audioGraph.addConnection({{previousPluginNodeID, 1}, {currentPluginNodeID, 1}});
+                auto prevNodeID = pluginEditorComponents[i - 1]->getNodeID();
+                auto currNodeID = pluginEditorComponents[i]->getNodeID();
+
+                audioGraph.addConnection({{prevNodeID, 0}, {currNodeID, 0}});
+                audioGraph.addConnection({{prevNodeID, 1}, {currNodeID, 1}});
+                audioGraph.addConnection({{prevNodeID, 0}, {currNodeID, 1}});
+                audioGraph.addConnection({{prevNodeID, 1}, {currNodeID, 0}});
             }
 
-            // Connect the last plugin to the output node
+            // Connect last plugin to both stereo outputs
             auto lastPluginNodeID = pluginEditorComponents.getLast()->getNodeID();
             audioGraph.addConnection({{lastPluginNodeID, 0}, {outputNode->nodeID, 0}});
-            audioGraph.addConnection({{lastPluginNodeID, 1}, {outputNode->nodeID, 1}}); // Ensure plugin is heard on both channels
+            audioGraph.addConnection({{lastPluginNodeID, 1}, {outputNode->nodeID, 1}});
+            audioGraph.addConnection({{lastPluginNodeID, 0}, {outputNode->nodeID, 1}});
+            audioGraph.addConnection({{lastPluginNodeID, 1}, {outputNode->nodeID, 0}});
         }
         else
         {
-            // If no plugins are present, connect the input node to the output node
+            std::cout << "No plugins detected - Connecting Input directly to Output" << std::endl;
             audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
-            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
+            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
+            audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 1}});
+            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 0}});
         }
     }
 
-    // Handle mute state after bypass state change
-    handleMuteEvent(menuBarComponent->isMuted());
+    resized();
 }
+
+
+
+
+
+
 
 // AudioAppComponent methods
 void MainComponent::prepareToPlay(int /*samplesPerBlockExpected*/, double /*sampleRate*/)
@@ -535,65 +578,43 @@ void MainComponent::releaseResources()
 
 void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo &bufferToFill)
 {
-    // Capture the input signal level
-    float maxLevel = 0.0f;
-    for (int channel = 0; channel < bufferToFill.buffer->getNumChannels(); ++channel)
-    {
-        auto *channelData = bufferToFill.buffer->getReadPointer(channel, bufferToFill.startSample);
-        for (int sample = 0; sample < bufferToFill.numSamples; ++sample)
-        {
-            maxLevel = std::max(maxLevel, std::abs(channelData[sample]));
-        }
-    }
-
     if (menuBarComponent->isBypassed())
     {
-        // If bypassed, read from the input node directly
+        // Process dry signal
         juce::AudioBuffer<float> inputBuffer(bufferToFill.buffer->getNumChannels(), bufferToFill.numSamples);
-        juce::MidiBuffer midiBuffer; // Create a MidiBuffer object
-        inputNode->getProcessor()->processBlock(inputBuffer, midiBuffer);
-        maxLevel = inputBuffer.getMagnitude(0, inputBuffer.getNumSamples());
+        juce::MidiBuffer midiBuffer;
 
-        // Mix input channels and copy to both output channels
+        inputNode->getProcessor()->processBlock(inputBuffer, midiBuffer);
+
         for (int sample = 0; sample < bufferToFill.numSamples; ++sample)
         {
-            float mixedSample = 0.0f;
-            for (int channel = 0; channel < inputBuffer.getNumChannels(); ++channel)
-            {
-                mixedSample += inputBuffer.getSample(channel, sample);
-            }
-            mixedSample /= inputBuffer.getNumChannels(); // Average the mixed sample
+            float dryLeft = inputBuffer.getSample(0, sample);
+            float dryRight = (inputBuffer.getNumChannels() > 1) ? inputBuffer.getSample(1, sample) : dryLeft;
 
-            for (int channel = 0; channel < bufferToFill.buffer->getNumChannels(); ++channel)
-            {
-                bufferToFill.buffer->setSample(channel, bufferToFill.startSample + sample, mixedSample);
-            }
+            // Send a fully balanced mix of both inputs to both output channels
+            bufferToFill.buffer->setSample(0, sample, 0.5f * (dryLeft + dryRight));
+            bufferToFill.buffer->setSample(1, sample, 0.5f * (dryLeft + dryRight));
         }
+        return;
     }
 
-    // If muted, clear the buffer
-    if (menuBarComponent->isMuted())
+    // Process wet (plugin-processed) signal
+    juce::AudioBuffer<float> processedBuffer(bufferToFill.buffer->getNumChannels(), bufferToFill.numSamples);
+    juce::MidiBuffer midiBuffer;
+    inputNode->getProcessor()->processBlock(processedBuffer, midiBuffer);
+
+    for (int sample = 0; sample < bufferToFill.numSamples; ++sample)
     {
-        bufferToFill.clearActiveBufferRegion();
-    }
-    else if (menuBarComponent->isBypassed())
-    {
-        // Clear the buffer to avoid residual audio
-        bufferToFill.clearActiveBufferRegion();
-    }
-    else
-    {
-        // Ensure dry and wet signals are equal on both channels
-        for (int channel = 0; channel < bufferToFill.buffer->getNumChannels(); ++channel)
-        {
-            auto* channelData = bufferToFill.buffer->getWritePointer(channel, bufferToFill.startSample);
-            for (int sample = 0; sample < bufferToFill.numSamples; ++sample)
-            {
-                channelData[sample] = bufferToFill.buffer->getSample(0, bufferToFill.startSample + sample);
-            }
-        }
+        float wetLeft = processedBuffer.getSample(0, sample);
+        float wetRight = (processedBuffer.getNumChannels() > 1) ? processedBuffer.getSample(1, sample) : wetLeft;
+
+        // Ensure dry and wet signals are mixed equally across both channels
+        bufferToFill.buffer->setSample(0, sample, (wetLeft + wetRight) * 0.5f);
+        bufferToFill.buffer->setSample(1, sample, (wetLeft + wetRight) * 0.5f);
     }
 }
+
+
 // ApplicationCommandTarget methods
 juce::ApplicationCommandTarget *MainComponent::getNextCommandTarget()
 {
