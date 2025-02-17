@@ -436,11 +436,11 @@ void MainComponent::handleMuteEvent(bool muted)
     {
         // Remove the connection to the output node
         audioGraph.removeConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
-        audioGraph.removeConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
+        audioGraph.removeConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 1}});
         for (auto *editor : pluginEditorComponents)
         {
             audioGraph.removeConnection({{editor->getNodeID(), 0}, {outputNode->nodeID, 0}});
-            audioGraph.removeConnection({{editor->getNodeID(), 1}, {outputNode->nodeID, 1}});
+            audioGraph.removeConnection({{editor->getNodeID(), 0}, {outputNode->nodeID, 1}});
         }
     }
     else
@@ -455,7 +455,7 @@ void MainComponent::handleMuteEvent(bool muted)
         {
             auto lastPluginNodeID = pluginEditorComponents.getLast()->getNodeID();
             audioGraph.addConnection({{lastPluginNodeID, 0}, {outputNode->nodeID, 0}});
-            audioGraph.addConnection({{lastPluginNodeID, 1}, {outputNode->nodeID, 1}});
+            audioGraph.addConnection({{lastPluginNodeID, 0}, {outputNode->nodeID, 1}});
         }
         else
         {
@@ -481,7 +481,7 @@ void MainComponent::handleBypassEvent(bool bypassed)
 
         // Connect the input node directly to the output node
         audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
-        audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
+        audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
     }
     else
     {
@@ -508,13 +508,13 @@ void MainComponent::handleBypassEvent(bool bypassed)
             // Connect the last plugin to the output node
             auto lastPluginNodeID = pluginEditorComponents.getLast()->getNodeID();
             audioGraph.addConnection({{lastPluginNodeID, 0}, {outputNode->nodeID, 0}});
-            audioGraph.addConnection({{lastPluginNodeID, 0}, {outputNode->nodeID, 1}}); // Ensure plugin is heard on both channels
+            audioGraph.addConnection({{lastPluginNodeID, 1}, {outputNode->nodeID, 1}}); // Ensure plugin is heard on both channels
         }
         else
         {
             // If no plugins are present, connect the input node to the output node
             audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
-            audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
+            audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}}); // Ensure input is heard on both channels
         }
     }
 
@@ -575,6 +575,23 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo &buffer
     if (menuBarComponent->isMuted())
     {
         bufferToFill.clearActiveBufferRegion();
+    }
+    else if (menuBarComponent->isBypassed())
+    {
+        // Clear the buffer to avoid residual audio
+        bufferToFill.clearActiveBufferRegion();
+    }
+    else
+    {
+        // Ensure dry and wet signals are equal on both channels
+        for (int channel = 0; channel < bufferToFill.buffer->getNumChannels(); ++channel)
+        {
+            auto* channelData = bufferToFill.buffer->getWritePointer(channel, bufferToFill.startSample);
+            for (int sample = 0; sample < bufferToFill.numSamples; ++sample)
+            {
+                channelData[sample] = bufferToFill.buffer->getSample(0, bufferToFill.startSample + sample);
+            }
+        }
     }
 }
 // ApplicationCommandTarget methods
