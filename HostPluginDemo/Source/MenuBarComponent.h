@@ -1,38 +1,41 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "Buttons.h"
 
 class MenuBarComponent : public juce::Component,
                          public juce::MenuBarModel
 {
 public:
-    MenuBarComponent(juce::ApplicationCommandManager* commandManager, juce::AudioDeviceManager& dm)
-        : commandManager(commandManager), deviceManager(dm) // Initialize the reference properly
-    {
-        setApplicationCommandManagerToWatch(commandManager);
+MenuBarComponent(juce::ApplicationCommandManager* commandManager, juce::AudioDeviceManager& dm)
+    : commandManager(commandManager), deviceManager(dm) // Initialize the reference properly
+{
+    setApplicationCommandManagerToWatch(commandManager);
 
-        addAndMakeVisible(muteButton);
-        muteButton.setButtonText("Mute");
-        muteButton.onClick = [this] { toggleMute(); };
+    addAndMakeVisible(muteButton);
+    muteButton.onClick = [this] { toggleMute(); };
+    updateMuteButton();
 
-        addAndMakeVisible(bypassButton);
-        bypassButton.setButtonText("Bypass");
-        bypassButton.onClick = [this] { toggleBypass(); };
+    addAndMakeVisible(bypassButton);
+    bypassButton.onClick = [this] { toggleBypass(); };
+    updateBypassButton();
 
-        addAndMakeVisible(menuBar);
-        menuBar.setModel(this);
-        resized();
-        setBounds(0, 0, 800, 60); // Set initial bounds to ensure visibility
-    }
-    
+    addAndMakeVisible(menuBar);
+    menuBar.setModel(this);
+
+    // Ensure buttons are in front
+    muteButton.toFront(true);
+    bypassButton.toFront(true);
+}
+
     bool isMuted(){
         return muted;
     }
-    
+
     bool isBypassed(){
         return bypassed;
     }
-    
+
     void setInputSource(juce::String src){
         inputSource = src;
     }
@@ -50,27 +53,39 @@ public:
     void setBypassed(bool bypass)
     {
         bypassed = bypass;
-        bypassButton.setColour(juce::TextButton::buttonColourId, bypassed ? juce::Colours::red : juce::Colours::green);
+        updateBypassButton();
     }
 
     void setMuted(bool mute)
     {
         muted = mute;
-        muteButton.setColour(juce::TextButton::buttonColourId, muted ? juce::Colours::red : juce::Colours::green);
+        updateMuteButton();
     }
 
     ~MenuBarComponent() override {}
 
-    void resized() override
+    void paint(juce::Graphics& g) override
+    {
+        g.fillAll(juce::Colours::darkgrey); // Set dark grey background color
+    }
+
+    void resized()
     {
         auto area = getLocalBounds();
-        auto buttonWidth = 80;
-        auto buttonHeight = 40;
+        auto buttonWidth = 160; // 2X bigger
+        auto buttonHeight = 80; // 2X bigger
         auto menuBarHeight = 20;
-
+    
         menuBar.setBounds(area.removeFromTop(menuBarHeight));
-        muteButton.setBounds(area.removeFromRight(buttonWidth).removeFromBottom(buttonHeight).reduced(5));
-        bypassButton.setBounds(area.removeFromRight(buttonWidth).removeFromBottom(buttonHeight).reduced(5));
+        auto buttonArea = area.reduced(5);
+        auto centerX = buttonArea.getCentreX();
+        muteButton.setBounds(centerX - buttonWidth - 10, buttonArea.getY(), buttonWidth, buttonHeight);
+        bypassButton.setBounds(centerX + 10, buttonArea.getY(), buttonWidth, buttonHeight);
+    
+        // Debug statements
+        std::cout << "MenuBar bounds: " << menuBar.getBounds().toString() << std::endl;
+        std::cout << "MuteButton bounds: " << muteButton.getBounds().toString() << std::endl;
+        std::cout << "BypassButton bounds: " << bypassButton.getBounds().toString() << std::endl;
     }
 
     // Menu bar related methods
@@ -132,7 +147,7 @@ private:
     void toggleMute()
     {
         muted = !muted;
-        muteButton.setColour(juce::TextButton::buttonColourId, muted ? juce::Colours::red : juce::Colours::green);
+        updateMuteButton();
         if (muteCallback)
             muteCallback(muted);
     }
@@ -140,18 +155,29 @@ private:
     void toggleBypass()
     {
         bypassed = !bypassed;
-        bypassButton.setColour(juce::TextButton::buttonColourId, bypassed ? juce::Colours::red : juce::Colours::green);
+        updateBypassButton();
         if (bypassCallback)
             bypassCallback(bypassed);
+    }
+
+    void updateMuteButton()
+    {
+        auto muteSVG = juce::Drawable::createFromSVG(*juce::parseXML(muted ? SVGButtons::muteButtonOnSVG : SVGButtons::muteButtonOffSVG));
+        muteButton.setImages(muteSVG.get());
+    }
+
+    void updateBypassButton()
+    {
+        auto bypassSVG = juce::Drawable::createFromSVG(*juce::parseXML(bypassed ? SVGButtons::bypassButtonOnSVG : SVGButtons::bypassButtonOffSVG));
+        bypassButton.setImages(bypassSVG.get());
     }
 
     bool muted = false;
     bool bypassed = false;
     juce::String inputSource = " ";
 
-    juce::TextButton muteButton;
-    juce::TextButton bypassButton;
-    
+    juce::DrawableButton muteButton { "Mute", juce::DrawableButton::ImageFitted };
+    juce::DrawableButton bypassButton { "Bypass", juce::DrawableButton::ImageFitted };
 
     std::function<void(bool)> muteCallback = nullptr;
     std::function<void(bool)> bypassCallback = nullptr;

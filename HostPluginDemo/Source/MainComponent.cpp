@@ -6,7 +6,8 @@
 extern juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter();
 
 MainComponent::MainComponent()
-    : Thread("PluginScannerThread")
+    : Thread("PluginScannerThread"),
+      menuBarComponent(std::make_unique<::MenuBarComponent>(&commandManager, deviceManager)) // Initialize menuBarComponent
 {
     std::cout << "MainComponent Constructor" << std::endl;
 
@@ -52,11 +53,10 @@ MainComponent::MainComponent()
     deviceManager.addChangeListener(this);
 
     // Initialize and add the MenuBarComponent to the component
-    menuBarComponent = std::make_unique<::MenuBarComponent>(&commandManager, deviceManager);
     menuBarComponent->setMuteCallback([this](bool muted) { handleMuteEvent(muted); });
     menuBarComponent->setBypassCallback([this](bool bypassed) { handleBypassEvent(bypassed); });
     addAndMakeVisible(menuBarComponent.get());
-    menuBarComponent->setBounds(0, 20, getWidth(), 60); // Shift the menu bar just below the status bar
+    menuBarComponent->setBounds(0, 20, getWidth(), 100); // Increase height to ensure visibility
 
     // Add the plugin viewport and container
     addAndMakeVisible(pluginViewport);
@@ -114,7 +114,6 @@ MainComponent::MainComponent()
 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M7 1V13M1 7H13" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
-
     )";
     auto svgDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(svgData));
     addPluginButton.setImages(svgDrawable.get());
@@ -138,8 +137,11 @@ void MainComponent::paint(juce::Graphics &g)
 void MainComponent::resized()
 {
     const int statusBarHeight = 20; // Adjust this value based on the actual status bar height
+    const int menuBarHeight = 100; // Increase the height to ensure visibility of buttons
 
-    pluginViewport.setBounds(10, statusBarHeight + 130, getWidth() - 20, getHeight() - (statusBarHeight + 140)); // Adjusted to ensure it stays below the menu bar
+    menuBarComponent->setBounds(0, statusBarHeight, getWidth(), menuBarHeight); // Position the menu bar below the status bar
+
+    pluginViewport.setBounds(10, statusBarHeight + menuBarHeight + 10, getWidth() - 20, getHeight() - (statusBarHeight + menuBarHeight + 20)); // Adjusted to ensure it stays below the menu bar
 
     int totalWidth = 0;
     for (auto *editor : pluginEditorComponents)
@@ -153,28 +155,25 @@ void MainComponent::resized()
     for (auto *editor : pluginEditorComponents)
     {
         int editorHeight = editor->getHeight();
-        int y = pluginViewport.getHeight() / 2 - editorHeight / 2 - statusBarHeight; // Center the editor vertically
+        int y = pluginViewport.getHeight() / 2 - editorHeight / 2; // Center the editor vertically
 
         editor->setBounds(x, y, editor->getWidth(), editorHeight);
         x += editor->getWidth() + 20; // Add uniform spacing
     }
 
-    pluginContainer.setSize(x + 60, getHeight() - (statusBarHeight)); // Update the container size
+    pluginContainer.setSize(x + 60, getHeight() - (statusBarHeight + menuBarHeight + 20)); // Update the container size
     pluginViewport.setViewPosition(0, 0); // Ensure the viewport starts at the top
 
     // Add a '+' button to open the plugin dialog at the end of the viewport
     if (pluginEditorComponents.isEmpty())
     {
-        addPluginButton.setBounds((getWidth() - addPluginButton.getWidth()) / 2, (getHeight()/2 - addPluginButton.getHeight()/2), addPluginButton.getWidth(), addPluginButton.getHeight());
-      
+        addPluginButton.setBounds((getWidth() - addPluginButton.getWidth()) / 2, (getHeight() / 2 - addPluginButton.getHeight() / 2), addPluginButton.getWidth(), addPluginButton.getHeight());
     }
     else
     {
-        addPluginButton.setBounds(x, pluginViewport.getHeight() /2 - addPluginButton.getHeight()/2 -statusBarHeight, addPluginButton.getWidth(), addPluginButton.getHeight());
-        
+        addPluginButton.setBounds(x, pluginViewport.getHeight() / 2 - addPluginButton.getHeight() / 2, addPluginButton.getWidth(), addPluginButton.getHeight());
     }
     pluginContainer.addAndMakeVisible(addPluginButton);
-    
 }
 
 // ... rest of the code ...
