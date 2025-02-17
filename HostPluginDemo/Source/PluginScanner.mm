@@ -23,6 +23,12 @@ void scanForPlugins(juce::HashMap<juce::String, juce::PluginDescription>& plugin
     {
         AudioComponentDescription desc = [component audioComponentDescription];
 
+        // Filter out plugins that are not effects
+        if (desc.componentType != kAudioUnitType_Effect)
+        {
+            continue;
+        }
+
         juce::PluginDescription pluginDescription;
         pluginDescription.name = [component name].UTF8String;
         pluginDescription.pluginFormatName = "AudioUnit";
