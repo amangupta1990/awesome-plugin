@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "FullScreenView.h"
+#include "Buttons.h"
 
 class PluginEditorComponent : public juce::Component
 {
@@ -195,33 +196,15 @@ private:
 
 juce::String PluginEditorComponent::deleteButtonSvg() const
 {
-    return R"(
-<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M11 1L6 6M6 6L1 11M6 6L1 1M6 6L11 11" stroke="#8D8D8D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-
-    )";
+    return SVGButtons::deleteButtonSVG;
 }
 
 juce::String PluginEditorComponent::expandButtonSvg() const
 {
-    return R"(
-       <svg width="9" height="12" viewBox="0 0 9 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g opacity="0.4">
-<path d="M1 4.5L4.5 1L8 4.5" stroke="white"/>
-<path d="M1 7.5L4.5 11L8 7.5" stroke="white"/>
-</g>
-</svg>
-
-    )";
+    return SVGButtons::expandButtonSVG;
 }
 
 juce::String PluginEditorComponent::closeButtonSvg() const
 {
-    return R"(
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <line x1="12" y1="12" x2="28" y2="28" stroke="white" stroke-width="2"/>
-            <line x1="12" y1="28" x2="28" y2="12" stroke="white" stroke-width="2"/>
-        </svg>
-    )";
+    return SVGButtons::closeButtonSVG;
 }

@@ -77,10 +77,11 @@ MenuBarComponent(juce::ApplicationCommandManager* commandManager, juce::AudioDev
         auto menuBarHeight = 20;
     
         menuBar.setBounds(area.removeFromTop(menuBarHeight));
-        auto buttonArea = area.reduced(5);
-        auto centerX = buttonArea.getCentreX();
-        muteButton.setBounds(centerX - buttonWidth - 10, buttonArea.getY(), buttonWidth, buttonHeight);
-        bypassButton.setBounds(centerX + 10, buttonArea.getY(), buttonWidth, buttonHeight);
+        auto byPassbuttonArea = area.reduced(5);
+        auto muteButtonArea = area.reduced(6);
+        auto centerX = byPassbuttonArea.getCentreX();
+        muteButton.setBounds(centerX - buttonWidth - 10, muteButtonArea.getY(), buttonWidth-10, buttonHeight-10);
+        bypassButton.setBounds(centerX + 10, byPassbuttonArea.getY(), buttonWidth, buttonHeight);
     
         // Debug statements
         std::cout << "MenuBar bounds: " << menuBar.getBounds().toString() << std::endl;
