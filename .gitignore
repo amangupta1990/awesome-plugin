@@ -1,0 +1,45 @@
+# Ignore build directories
+Build/
+build/
+
+# Ignore JUCE-generated files
+JuceLibraryCode/
+
+# Ignore macOS specific files
+.DS_Store
+
+# Ignore temporary files
+*.tmp
+*.log
+*.bak
+*.swp
+
+# Ignore user-specific files
+*.user
+*.suo
+*.userprefs
+
+# Ignore compiled dynamic libraries
+*.dll
+*.so
+*.dylib
+
+# Ignore compiled object files
+*.o
+*.obj
+
+# Ignore compiled static libraries
+*.lib
+*.a
+
+# Ignore executable files
+*.exe
+*.out
+*.app
+
+# Ignore Visual Studio Code workspace settings
+.vscode/
+
+# Ignore Xcode project files
+*.xcworkspace
+xcuserdata/
