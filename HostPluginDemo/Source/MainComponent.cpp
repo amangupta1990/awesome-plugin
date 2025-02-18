@@ -118,11 +118,23 @@ MainComponent::MainComponent()
     )";
     auto svgDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(svgData));
     addPluginButton.setImages(svgDrawable.get());
+
+    // Load the saved plugin chain state
+    juce::File pluginStateFile = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("pluginChainState.xml");
+    if (pluginStateFile.existsAsFile())
+    {
+        loadPluginChain(pluginStateFile);
+    }
 }
 
 MainComponent::~MainComponent()
 {
     std::cout << "MainComponent Destructor" << std::endl;
+
+    // Save the plugin chain state before quitting
+    juce::File pluginStateFile = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("pluginChainState.xml");
+    savePluginChain(pluginStateFile);
+
     stopThread(2000); // Stop the thread with a timeout of 2 seconds
     deviceManager.removeAudioCallback(&audioProcessorPlayer);
     deviceManager.removeChangeListener(this);
@@ -652,6 +664,120 @@ void MainComponent::changeListenerCallback(juce::ChangeBroadcaster* source)
         for (const auto& device : outputDevices)
         {
             std::cout << "Output device: " << device << std::endl;
+        }
+    }
+}
+
+void MainComponent::savePluginChain(const juce::File& file)
+{
+    juce::XmlElement xml("PLUGIN_CHAIN");
+
+    for (auto* editor : pluginEditorComponents)
+    {
+        auto* processor = editor->getAudioProcessor();
+        juce::XmlElement* pluginXml = xml.createNewChildElement("PLUGIN");
+        pluginXml->setAttribute("id", static_cast<int>(editor->getNodeID().uid));
+        pluginXml->setAttribute("name", processor->getName());
+
+        juce::MemoryBlock stateData;
+        processor->getStateInformation(stateData);
+        std::unique_ptr<juce::XmlElement> stateXml = juce::AudioPluginInstance::getXmlFromBinary(stateData.getData(), stateData.getSize());
+        if (stateXml != nullptr)
+        {
+            pluginXml->addChildElement(stateXml.release());
+        }
+    }
+
+    xml.writeToFile(file, {});
+}
+
+void MainComponent::loadPluginChain(const juce::File& file)
+{
+    std::unique_ptr<juce::XmlElement> xml(juce::XmlDocument::parse(file));
+
+    if (xml == nullptr || !xml->hasTagName("PLUGIN_CHAIN"))
+        return;
+
+    // Clear existing plugins
+    for (auto* editor : pluginEditorComponents)
+    {
+        audioGraph.removeNode(editor->getNodeID());
+    }
+    pluginEditorComponents.clear();
+
+    for (auto* pluginXml : xml->getChildIterator())
+    {
+        juce::String pluginName = pluginXml->getStringAttribute("name");
+        juce::XmlElement* stateXml = pluginXml->getChildByName("STATE");
+
+        if (pluginMap.contains(pluginName))
+        {
+            const juce::PluginDescription& pluginDescription = pluginMap[pluginName];
+            juce::AudioPluginFormat* format = nullptr;
+
+            for (int i = 0; i < formatManager.getNumFormats(); ++i)
+            {
+                auto* currentFormat = formatManager.getFormat(i);
+                if (currentFormat->getName() == pluginDescription.pluginFormatName)
+                {
+                    format = currentFormat;
+                    break;
+                }
+            }
+
+            if (format != nullptr)
+            {
+                format->createPluginInstanceAsync(pluginDescription, 44100.0, 512, [this, stateXml](std::unique_ptr<juce::AudioPluginInstance> instance, const juce::String& error)
+                {
+                    if (instance != nullptr)
+                    {
+                        if (stateXml != nullptr)
+                        {
+                            juce::MemoryBlock stateData;
+                            juce::AudioPluginInstance::copyXmlToBinary(*stateXml, stateData);
+                            instance->setStateInformation(stateData.getData(), static_cast<int>(stateData.getSize()));
+                        }
+                        auto nodeId = audioGraph.addNode(std::move(instance))->nodeID;
+
+                        auto* pluginInstance = audioGraph.getNodeForId(nodeId)->getProcessor();
+                        auto editor = pluginInstance->createEditorIfNeeded();
+                        if (editor != nullptr)
+                        {
+                            auto* editorComponent = new PluginEditorComponent(
+                                std::unique_ptr<juce::AudioProcessorEditor>(editor),
+                                [this, nodeId] { removePluginFromGraph(nodeId); },
+                                [this] { resized(); }
+                            );
+                            editorComponent->setNodeID(nodeId);
+                            pluginEditorComponents.add(editorComponent);
+                            pluginContainer.addAndMakeVisible(editorComponent);
+                            resized();
+                        }
+
+                        // Connect the new plugin in the chain
+                        if (pluginEditorComponents.size() == 1)
+                        {
+                            audioGraph.removeConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
+                            audioGraph.removeConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
+                            audioGraph.addConnection({{inputNode->nodeID, 0}, {nodeId, 0}});
+                            audioGraph.addConnection({{inputNode->nodeID, 1}, {nodeId, 1}});
+                        }
+                        else
+                        {
+                            auto previousPluginNodeID = pluginEditorComponents[pluginEditorComponents.size() - 2]->getNodeID();
+                            audioGraph.addConnection({{previousPluginNodeID, 0}, {nodeId, 0}});
+                            audioGraph.addConnection({{previousPluginNodeID, 1}, {nodeId, 1}});
+                        }
+
+                        audioGraph.addConnection({{nodeId, 0}, {outputNode->nodeID, 0}});
+                        audioGraph.addConnection({{nodeId, 0}, {outputNode->nodeID, 1}});
+                    }
+                    else
+                    {
+                        std::cout << "Failed to create plugin instance: " << error << std::endl;
+                    }
+                });
+            }
         }
     }
 }

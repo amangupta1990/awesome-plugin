@@ -63,6 +63,11 @@ public:
         }
     }
 
+    juce::AudioProcessor* getAudioProcessor()
+    {
+        return editor->getAudioProcessor();
+    }
+
 private:
     std::unique_ptr<juce::AudioProcessorEditor> editor;
     juce::Component editorHolder; // Wrapper to hold the editor

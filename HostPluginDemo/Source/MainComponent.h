@@ -42,6 +42,9 @@ public:
 
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
+    void savePluginChain(const juce::File& file);
+    void loadPluginChain(const juce::File& file);
+
 private:
     void run() override;
     void addPluginToGraph(const juce::String &pluginName);
