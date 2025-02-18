@@ -16,7 +16,19 @@ public:
 
     void shutdown() override
     {
-        mainWindow = nullptr;
+        std::cout << "Shutdown method called" << std::endl;
+        if (mainWindow != nullptr)
+        {
+            auto* mainComponent = dynamic_cast<MainComponent*>(mainWindow->getContentComponent());
+            if (mainComponent != nullptr)
+            {
+                juce::File pluginStateFile = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("pluginChainState.xml");
+                std::cout << "Saving plugin chain state to: " << pluginStateFile.getFullPathName() << std::endl;
+                mainComponent->savePluginChain(pluginStateFile);
+            }
+        }
+
+        mainWindow = nullptr; // (deletes our window)
     }
 
     void systemRequestedQuit() override

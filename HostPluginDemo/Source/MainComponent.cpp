@@ -5,10 +5,17 @@
 
 extern juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter();
 
+namespace
+{
+    MainComponent* mainComponentInstance = nullptr;
+}
+
 MainComponent::MainComponent()
     : Thread("PluginScannerThread"),
       menuBarComponent(std::make_unique<::MenuBarComponent>(&commandManager, deviceManager)) // Initialize menuBarComponent
 {
+    mainComponentInstance = this;
+
     std::cout << "MainComponent Constructor" << std::endl;
 
     setSize(juce::Desktop::getInstance().getDisplays().getMainDisplay().userArea.getWidth(),
@@ -118,13 +125,6 @@ MainComponent::MainComponent()
     )";
     auto svgDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(svgData));
     addPluginButton.setImages(svgDrawable.get());
-
-    // Load the saved plugin chain state
-    juce::File pluginStateFile = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("pluginChainState.xml");
-    if (pluginStateFile.existsAsFile())
-    {
-        loadPluginChain(pluginStateFile);
-    }
 }
 
 MainComponent::~MainComponent()
@@ -138,6 +138,8 @@ MainComponent::~MainComponent()
     stopThread(2000); // Stop the thread with a timeout of 2 seconds
     deviceManager.removeAudioCallback(&audioProcessorPlayer);
     deviceManager.removeChangeListener(this);
+
+    mainComponentInstance = nullptr;
 }
 
 void MainComponent::paint(juce::Graphics &g)
@@ -383,6 +385,13 @@ void MainComponent::removePluginFromGraph(juce::AudioProcessorGraph::NodeID node
 void MainComponent::run()
 {
     scanForPlugins(pluginMap);
+
+    // Load the saved plugin chain state after scanning for plugins
+    juce::File pluginStateFile = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("pluginChainState.xml");
+    if (pluginStateFile.existsAsFile())
+    {
+        loadPluginChain(pluginStateFile);
+    }
 }
 
 // Menu bar related methods
@@ -670,6 +679,7 @@ void MainComponent::changeListenerCallback(juce::ChangeBroadcaster* source)
 
 void MainComponent::savePluginChain(const juce::File& file)
 {
+    std::cout << "savePluginChain method called" << std::endl;
     juce::XmlElement xml("PLUGIN_CHAIN");
 
     for (auto* editor : pluginEditorComponents)
@@ -688,7 +698,14 @@ void MainComponent::savePluginChain(const juce::File& file)
         }
     }
 
-    xml.writeToFile(file, {});
+    if (xml.writeToFile(file, {}))
+    {
+        std::cout << "Plugin chain state saved successfully" << std::endl;
+    }
+    else
+    {
+        std::cerr << "Failed to save plugin chain state" << std::endl;
+    }
 }
 
 void MainComponent::loadPluginChain(const juce::File& file)
@@ -709,6 +726,8 @@ void MainComponent::loadPluginChain(const juce::File& file)
     {
         juce::String pluginName = pluginXml->getStringAttribute("name");
         juce::XmlElement* stateXml = pluginXml->getChildByName("STATE");
+
+        std::cout << "Loading plugin: " << pluginName << std::endl;
 
         if (pluginMap.contains(pluginName))
         {
