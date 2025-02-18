@@ -148,12 +148,15 @@ void MainComponent::paint(juce::Graphics &g)
     g.fillAll(juce::Colour(0x1E1E1E)); 
     g.setColour(juce::Colours::white);
     g.setFont(20.0f);
+
+    // Remove the lines connecting the plugins
 }
 
 void MainComponent::resized()
 {
     const int statusBarHeight = 20; // Adjust this value based on the actual status bar height
     const int menuBarHeight = 160; // Increase the height to ensure visibility of buttons
+    const int pluginGap = 60; // Further increase the gap between plugins
 
     menuBarComponent->setBounds(0, 0, getWidth(), menuBarHeight); // Position the menu bar below the status bar
 
@@ -162,7 +165,7 @@ void MainComponent::resized()
     int totalWidth = 0;
     for (auto *editor : pluginEditorComponents)
     {
-        totalWidth += editor->getWidth() + 10; // Calculate total width needed for all editors
+        totalWidth += editor->getWidth() + pluginGap; // Calculate total width needed for all editors
     }
 
     int x = (getWidth() - totalWidth) / 2; // Start from the center horizontally
@@ -174,7 +177,7 @@ void MainComponent::resized()
         int y = pluginViewport.getHeight() / 2 - editorHeight / 2; // Center the editor vertically
 
         editor->setBounds(x, y, editor->getWidth(), editorHeight);
-        x += editor->getWidth() + 20; // Add uniform spacing
+        x += editor->getWidth() + pluginGap; // Add uniform spacing
     }
 
     pluginContainer.setSize(x + 60, getHeight() - (statusBarHeight + menuBarHeight + 20)); // Update the container size
@@ -266,6 +269,9 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
                         pluginEditorComponents.add(editorComponent);
                         pluginContainer.addAndMakeVisible(editorComponent);
                         resized(); // Update layout
+
+                        // Scroll to the end after adding the new plugin
+                        pluginViewport.setViewPositionProportionately(1.0, 0.0); // Scroll to the end after adding the new plugin
                     }
 
                     // Connect the new plugin in the chain
@@ -792,6 +798,8 @@ void MainComponent::loadPluginChain(const juce::File& file)
 
                         audioGraph.addConnection({{newNodeId, 0}, {outputNode->nodeID, 0}});
                         audioGraph.addConnection({{newNodeId, 0}, {outputNode->nodeID, 1}});
+
+                        pluginViewport.setViewPositionProportionately(1.0, 0.0); // Scroll to the end after loading the plugin
                     }
                     else
                     {
