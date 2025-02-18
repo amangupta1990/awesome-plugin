@@ -23,7 +23,7 @@ public:
         auto deleteSvg = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(deleteButtonSvg()));
         auto expandSvg = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(expandButtonSvg()));
         auto closeSvg = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(closeButtonSvg()));
-        auto bypassSvg = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(bypassButtonSvg()));
+        auto bypassSvg = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(bypassButtonOffSvg())); // Start with the off state
 
         deleteButton.setImages(deleteSvg.get());
         expandButton.setImages(expandSvg.get());
@@ -213,6 +213,9 @@ private:
             {
                 bypassParam->setValueNotifyingHost(isBypassed ? 1.0f : 0.0f);
             }
+
+            auto bypassSvg = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(isBypassed ? bypassButtonOnSvg() : bypassButtonOffSvg()));
+            bypassButton.setImages(bypassSvg.get());
         }
     }
 
@@ -221,6 +224,8 @@ private:
     juce::String expandButtonSvg() const;
     juce::String closeButtonSvg() const;
     juce::String bypassButtonSvg() const;
+    juce::String bypassButtonOnSvg() const;
+    juce::String bypassButtonOffSvg() const;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginEditorComponent)
 };
@@ -240,7 +245,12 @@ juce::String PluginEditorComponent::closeButtonSvg() const
     return SVGButtons::closeButtonSVG;
 }
 
-juce::String PluginEditorComponent::bypassButtonSvg() const
+juce::String PluginEditorComponent::bypassButtonOnSvg() const
 {
-    return SVGButtons::bypassPluginSVG;
+    return SVGButtons::bypassPluginOnSVG;
+}
+
+juce::String PluginEditorComponent::bypassButtonOffSvg() const
+{
+    return SVGButtons::bypassPluginOffSVG;
 }
