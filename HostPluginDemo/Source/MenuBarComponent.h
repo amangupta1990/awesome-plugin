@@ -66,7 +66,7 @@ public:
 
     void paint(juce::Graphics& g) override
     {
-        g.fillAll(juce::Colours::darkgrey); // Set dark grey background color
+        g.fillAll(juce::Colour::fromRGB(38, 38, 38)); // Set dark grey background color using RGB
     }
 
     void resized() override
@@ -77,10 +77,11 @@ public:
         auto menuBarHeight = 20;
 
         menuBar.setBounds(area.removeFromTop(menuBarHeight));
+        menuBar.setColour(juce::Label::backgroundColourId, juce::Colour::fromRGB(38, 38, 38));
         auto buttonArea = area.reduced(5);
         auto centerX = buttonArea.getCentreX();
-        muteButton.setBounds(centerX - buttonWidth - 10, buttonArea.getY(), buttonWidth, buttonHeight);
-        bypassButton.setBounds(centerX + 10, buttonArea.getY(), buttonWidth, buttonHeight);
+        muteButton.setBounds(centerX - buttonWidth - 10, buttonArea.getY()+40, buttonWidth, buttonHeight);
+        bypassButton.setBounds(centerX + 10, buttonArea.getY()+20, buttonWidth + 40, buttonHeight +40);
 
         // Debug statements
         std::cout << "MenuBar bounds: " << menuBar.getBounds().toString() << std::endl;

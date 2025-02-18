@@ -15,7 +15,7 @@ public:
         }
 
         addAndMakeVisible(titleBar);
-        titleBar.setColour(juce::Label::backgroundColourId, juce::Colours::darkgrey);
+        titleBar.setColour(juce::Label::backgroundColourId, juce::Colour::fromRGB(38, 38, 38));
 
         addAndMakeVisible(closeButton);
         auto closeSvgXml = juce::parseXML(getCloseButtonSVG());

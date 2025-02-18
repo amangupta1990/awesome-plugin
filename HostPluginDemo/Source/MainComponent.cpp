@@ -130,7 +130,7 @@ MainComponent::~MainComponent()
 
 void MainComponent::paint(juce::Graphics &g)
 {
-    g.fillAll(juce::Colours::black); // Set slate grey background color
+    g.fillAll(juce::Colour(0x1E1E1E)); 
     g.setColour(juce::Colours::white);
     g.setFont(20.0f);
 }
@@ -138,9 +138,9 @@ void MainComponent::paint(juce::Graphics &g)
 void MainComponent::resized()
 {
     const int statusBarHeight = 20; // Adjust this value based on the actual status bar height
-    const int menuBarHeight = 100; // Increase the height to ensure visibility of buttons
+    const int menuBarHeight = 160; // Increase the height to ensure visibility of buttons
 
-    menuBarComponent->setBounds(0, statusBarHeight, getWidth(), menuBarHeight); // Position the menu bar below the status bar
+    menuBarComponent->setBounds(0, 0, getWidth(), menuBarHeight); // Position the menu bar below the status bar
 
     pluginViewport.setBounds(10, statusBarHeight + menuBarHeight + 10, getWidth() - 20, getHeight() - (statusBarHeight + menuBarHeight + 20)); // Adjusted to ensure it stays below the menu bar
 
