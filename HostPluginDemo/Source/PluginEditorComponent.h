@@ -114,8 +114,8 @@ private:
             int editorWidth = editor->getWidth();
             int editorHeight = editor->getHeight();
 
-            int newWidth = juce::jmin(editorWidth, 400);
-            int newHeight = juce::jmin(editorHeight, 300);
+            int newWidth = juce::jmin(editorWidth / 1.5, 400 / 1.5);
+            int newHeight = juce::jmin(editorHeight / 1.5, 300 / 1.5);
 
             int centerX = (parentWidth - newWidth) / 2;
             int centerY = (parentHeight - newHeight - 70) / 2;
