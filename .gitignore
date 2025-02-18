@@ -1,6 +1,7 @@
 # Ignore build directories
 Build/
 build/
+HostPluginDemo/Builds/
 
 # Ignore JUCE-generated files
 JuceLibraryCode/
