@@ -1,6 +1,7 @@
 #include "MainComponent.h"
 #include "MenuBarComponent.h"
 #include "PluginEditorComponent.h"
+#include "PluginProcessor.h" // Include the new header file
 #include <iostream>
 
 extern juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter();
@@ -680,25 +681,22 @@ void MainComponent::changeListenerCallback(juce::ChangeBroadcaster* source)
 void MainComponent::savePluginChain(const juce::File& file)
 {
     std::cout << "savePluginChain method called" << std::endl;
-    juce::XmlElement xml("PLUGIN_CHAIN");
+    juce::MemoryOutputStream stream;
 
     for (auto* editor : pluginEditorComponents)
     {
         auto* processor = editor->getAudioProcessor();
-        juce::XmlElement* pluginXml = xml.createNewChildElement("PLUGIN");
-        pluginXml->setAttribute("id", static_cast<int>(editor->getNodeID().uid));
-        pluginXml->setAttribute("name", processor->getName());
-
         juce::MemoryBlock stateData;
         processor->getStateInformation(stateData);
-        std::unique_ptr<juce::XmlElement> stateXml = juce::AudioPluginInstance::getXmlFromBinary(stateData.getData(), stateData.getSize());
-        if (stateXml != nullptr)
-        {
-            pluginXml->addChildElement(stateXml.release());
-        }
+        std::cout << "State data size for plugin " << processor->getName() << ": " << stateData.getSize() << std::endl;
+
+        stream.writeInt(static_cast<int>(editor->getNodeID().uid));
+        stream.writeString(processor->getName());
+        stream.writeInt(static_cast<int>(stateData.getSize()));
+        stream.write(stateData.getData(), stateData.getSize());
     }
 
-    if (xml.writeToFile(file, {}))
+    if (file.replaceWithData(stream.getData(), stream.getDataSize()))
     {
         std::cout << "Plugin chain state saved successfully" << std::endl;
     }
@@ -710,10 +708,14 @@ void MainComponent::savePluginChain(const juce::File& file)
 
 void MainComponent::loadPluginChain(const juce::File& file)
 {
-    std::unique_ptr<juce::XmlElement> xml(juce::XmlDocument::parse(file));
-
-    if (xml == nullptr || !xml->hasTagName("PLUGIN_CHAIN"))
+    juce::MemoryBlock fileData;
+    if (!file.loadFileAsData(fileData))
+    {
+        std::cerr << "Failed to load plugin chain state" << std::endl;
         return;
+    }
+
+    juce::MemoryInputStream stream(fileData, false);
 
     // Clear existing plugins
     for (auto* editor : pluginEditorComponents)
@@ -722,10 +724,13 @@ void MainComponent::loadPluginChain(const juce::File& file)
     }
     pluginEditorComponents.clear();
 
-    for (auto* pluginXml : xml->getChildIterator())
+    while (!stream.isExhausted())
     {
-        juce::String pluginName = pluginXml->getStringAttribute("name");
-        juce::XmlElement* stateXml = pluginXml->getChildByName("STATE");
+        int nodeId = stream.readInt();
+        juce::String pluginName = stream.readString();
+        int stateSize = stream.readInt();
+        juce::MemoryBlock stateData;
+        stream.readIntoMemoryBlock(stateData, stateSize);
 
         std::cout << "Loading plugin: " << pluginName << std::endl;
 
@@ -746,28 +751,25 @@ void MainComponent::loadPluginChain(const juce::File& file)
 
             if (format != nullptr)
             {
-                format->createPluginInstanceAsync(pluginDescription, 44100.0, 512, [this, stateXml](std::unique_ptr<juce::AudioPluginInstance> instance, const juce::String& error)
+                format->createPluginInstanceAsync(pluginDescription, 44100.0, 512, [this, stateData, nodeId, pluginName](std::unique_ptr<juce::AudioPluginInstance> instance, const juce::String& error)
                 {
                     if (instance != nullptr)
                     {
-                        if (stateXml != nullptr)
-                        {
-                            juce::MemoryBlock stateData;
-                            juce::AudioPluginInstance::copyXmlToBinary(*stateXml, stateData);
-                            instance->setStateInformation(stateData.getData(), static_cast<int>(stateData.getSize()));
-                        }
-                        auto nodeId = audioGraph.addNode(std::move(instance))->nodeID;
+                        instance->setStateInformation(stateData.getData(), static_cast<int>(stateData.getSize()));
+                        std::cout << "Loaded state for plugin: " << pluginName << std::endl;
 
-                        auto* pluginInstance = audioGraph.getNodeForId(nodeId)->getProcessor();
+                        auto newNodeId = audioGraph.addNode(std::move(instance))->nodeID;
+
+                        auto* pluginInstance = audioGraph.getNodeForId(newNodeId)->getProcessor();
                         auto editor = pluginInstance->createEditorIfNeeded();
                         if (editor != nullptr)
                         {
                             auto* editorComponent = new PluginEditorComponent(
                                 std::unique_ptr<juce::AudioProcessorEditor>(editor),
-                                [this, nodeId] { removePluginFromGraph(nodeId); },
+                                [this, newNodeId] { removePluginFromGraph(newNodeId); },
                                 [this] { resized(); }
                             );
-                            editorComponent->setNodeID(nodeId);
+                            editorComponent->setNodeID(newNodeId);
                             pluginEditorComponents.add(editorComponent);
                             pluginContainer.addAndMakeVisible(editorComponent);
                             resized();
@@ -778,18 +780,18 @@ void MainComponent::loadPluginChain(const juce::File& file)
                         {
                             audioGraph.removeConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
                             audioGraph.removeConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
-                            audioGraph.addConnection({{inputNode->nodeID, 0}, {nodeId, 0}});
-                            audioGraph.addConnection({{inputNode->nodeID, 1}, {nodeId, 1}});
+                            audioGraph.addConnection({{inputNode->nodeID, 0}, {newNodeId, 0}});
+                            audioGraph.addConnection({{inputNode->nodeID, 1}, {newNodeId, 1}});
                         }
                         else
                         {
                             auto previousPluginNodeID = pluginEditorComponents[pluginEditorComponents.size() - 2]->getNodeID();
-                            audioGraph.addConnection({{previousPluginNodeID, 0}, {nodeId, 0}});
-                            audioGraph.addConnection({{previousPluginNodeID, 1}, {nodeId, 1}});
+                            audioGraph.addConnection({{previousPluginNodeID, 0}, {newNodeId, 0}});
+                            audioGraph.addConnection({{previousPluginNodeID, 1}, {newNodeId, 1}});
                         }
 
-                        audioGraph.addConnection({{nodeId, 0}, {outputNode->nodeID, 0}});
-                        audioGraph.addConnection({{nodeId, 0}, {outputNode->nodeID, 1}});
+                        audioGraph.addConnection({{newNodeId, 0}, {outputNode->nodeID, 0}});
+                        audioGraph.addConnection({{newNodeId, 0}, {outputNode->nodeID, 1}});
                     }
                     else
                     {
