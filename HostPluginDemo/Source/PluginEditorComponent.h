@@ -8,7 +8,7 @@ class PluginEditorComponent : public juce::Component
 {
 public:
     PluginEditorComponent(std::unique_ptr<juce::AudioProcessorEditor> editor, std::function<void()> onClose, std::function<void()> parentResized)
-        : editor(std::move(editor)), onClose(std::move(onClose)), parentResized(std::move(parentResized)), isFullscreen(false)
+        : editor(std::move(editor)), onClose(std::move(onClose)), parentResized(std::move(parentResized)), isFullscreen(false), isBypassed(false)
     {
         jassert(this->editor != nullptr); // Ensure the editor is valid
 
@@ -16,28 +16,34 @@ public:
         addAndMakeVisible(editorHolder);
         addAndMakeVisible(deleteButton);
         addAndMakeVisible(expandButton);
+        addAndMakeVisible(bypassButton);
         addChildComponent(closeButton); // Initially hidden
 
         // Ensure SVG functions are declared before usage
         auto deleteSvg = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(deleteButtonSvg()));
         auto expandSvg = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(expandButtonSvg()));
         auto closeSvg = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(closeButtonSvg()));
+        auto bypassSvg = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(bypassButtonSvg()));
 
         deleteButton.setImages(deleteSvg.get());
         expandButton.setImages(expandSvg.get());
         closeButton.setImages(closeSvg.get());
+        bypassButton.setImages(bypassSvg.get());
 
         deleteButton.setButtonStyle(juce::DrawableButton::ButtonStyle::ImageFitted);
         expandButton.setButtonStyle(juce::DrawableButton::ButtonStyle::ImageFitted);
         closeButton.setButtonStyle(juce::DrawableButton::ButtonStyle::ImageFitted);
+        bypassButton.setButtonStyle(juce::DrawableButton::ButtonStyle::ImageFitted);
 
         deleteButton.setClickingTogglesState(false);
         expandButton.setClickingTogglesState(false);
         closeButton.setClickingTogglesState(false);
+        bypassButton.setClickingTogglesState(false);
 
         deleteButton.onClick = [this, callback = std::move(onClose)] { callback(); };
         expandButton.onClick = [this] { toggleFullscreen(); };
         closeButton.onClick = [this] { exitFullscreen(); };
+        bypassButton.onClick = [this] { toggleBypass(); };
 
         fullScreenView = std::make_unique<FullScreenView>(nullptr, [this] { exitFullscreen(); });
         fullScreenView->setVisible(false);
@@ -76,9 +82,11 @@ private:
     juce::DrawableButton deleteButton { "Delete", juce::DrawableButton::ButtonStyle::ImageFitted };
     juce::DrawableButton expandButton { "Expand", juce::DrawableButton::ButtonStyle::ImageFitted };
     juce::DrawableButton closeButton { "Close", juce::DrawableButton::ButtonStyle::ImageFitted };
+    juce::DrawableButton bypassButton { "Bypass", juce::DrawableButton::ButtonStyle::ImageFitted };
     juce::AudioProcessorGraph::NodeID nodeID;
 
     bool isFullscreen;
+    bool isBypassed;
     juce::Rectangle<int> previousBounds;
     std::unique_ptr<FullScreenView> fullScreenView;
 
@@ -99,6 +107,7 @@ private:
             closeButton.setVisible(true);
             expandButton.setVisible(false);
             deleteButton.setVisible(false);
+            bypassButton.setVisible(false);
         }
         else
         {
@@ -116,13 +125,16 @@ private:
             editor->setBounds(0, 0, newWidth, newHeight);
 
             int buttonSize = 30;
-            int buttonX = (newWidth - 90) / 2;
+            int buttonSpacing = 20;
 
-            deleteButton.setBounds(buttonX, 0, buttonSize, buttonSize);
-            expandButton.setBounds(buttonX + buttonSize + 20, 0, buttonSize, buttonSize);
+            deleteButton.setBounds(0, 0, buttonSize, buttonSize);
+            expandButton.setBounds(buttonSize + buttonSpacing, 0, buttonSize, buttonSize);
+            bypassButton.setBounds(newWidth - buttonSize, 0, buttonSize, buttonSize);
+
             closeButton.setVisible(false);
             expandButton.setVisible(true);
             deleteButton.setVisible(true);
+            bypassButton.setVisible(true);
         }
     }
 
@@ -183,6 +195,7 @@ private:
             addAndMakeVisible(editorHolder);
             addAndMakeVisible(deleteButton);
             addAndMakeVisible(expandButton);
+            addAndMakeVisible(bypassButton);
             closeButton.setVisible(false);
 
             updateEditorSize();
@@ -191,10 +204,23 @@ private:
         }
     }
 
+    void toggleBypass()
+    {
+        if (auto* processor = getAudioProcessor())
+        {
+            isBypassed = !isBypassed;
+            if (auto* bypassParam = processor->getBypassParameter())
+            {
+                bypassParam->setValueNotifyingHost(isBypassed ? 1.0f : 0.0f);
+            }
+        }
+    }
+
     // Ensure SVG functions are declared before use
     juce::String deleteButtonSvg() const;
     juce::String expandButtonSvg() const;
     juce::String closeButtonSvg() const;
+    juce::String bypassButtonSvg() const;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginEditorComponent)
 };
@@ -212,4 +238,9 @@ juce::String PluginEditorComponent::expandButtonSvg() const
 juce::String PluginEditorComponent::closeButtonSvg() const
 {
     return SVGButtons::closeButtonSVG;
+}
+
+juce::String PluginEditorComponent::bypassButtonSvg() const
+{
+    return SVGButtons::bypassPluginSVG;
 }
