@@ -208,14 +208,18 @@ private:
     {
         if (auto* processor = getAudioProcessor())
         {
-            isBypassed = !isBypassed;
             if (auto* bypassParam = processor->getBypassParameter())
             {
+                isBypassed = !isBypassed;
                 bypassParam->setValueNotifyingHost(isBypassed ? 1.0f : 0.0f);
-            }
 
-            auto bypassSvg = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(isBypassed ? bypassButtonOnSvg() : bypassButtonOffSvg()));
-            bypassButton.setImages(bypassSvg.get());
+                auto bypassSvg = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(isBypassed ? bypassButtonOnSvg() : bypassButtonOffSvg()));
+                bypassButton.setImages(bypassSvg.get());
+            }
+            else
+            {
+                DBG("PluginEditorComponent: Bypass parameter not found for this plugin.");
+            }
         }
     }
 
