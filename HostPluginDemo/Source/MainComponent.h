@@ -45,6 +45,8 @@ public:
     void savePluginChain(const juce::File& file);
     void loadPluginChain(const juce::File& file);
 
+    void toggleBypassPlugin(juce::AudioProcessorGraph::NodeID nodeID, bool shouldBypass);
+
 private:
     void run() override;
     void addPluginToGraph(const juce::String &pluginName);

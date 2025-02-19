@@ -263,7 +263,8 @@ void MainComponent::addPluginToGraph(const juce::String &pluginName)
                         auto* editorComponent = new PluginEditorComponent(
                             std::unique_ptr<juce::AudioProcessorEditor>(editor),
                             [this, nodeId] { removePluginFromGraph(nodeId); },
-                            [this] { resized(); } // Pass a lambda that calls the resized method
+                            [this] { resized(); }, 
+                            [this](juce::AudioProcessorGraph::NodeID id, bool bypass) { toggleBypassPlugin(id, bypass); } // Pass the callback
                         );
                         editorComponent->setNodeID(nodeId); // Associate the editor component with the node ID
                         pluginEditorComponents.add(editorComponent);
@@ -587,11 +588,58 @@ void MainComponent::handleBypassEvent(bool bypassed)
     resized();
 }
 
-
-
-
-
-
+void MainComponent::toggleBypassPlugin(juce::AudioProcessorGraph::NodeID nodeID, bool shouldBypass)
+{
+    if (auto* node = audioGraph.getNodeForId(nodeID))
+    {
+        if (shouldBypass)
+        {
+            // Remove connections to and from the node
+            auto connections = audioGraph.getConnections();
+            for (const auto& connection : connections)
+            {
+                if (connection.source.nodeID == nodeID || connection.destination.nodeID == nodeID)
+                {
+                    audioGraph.removeConnection(connection);
+                }
+            }
+        }
+        else
+        {
+            // Restore connections to and from the node
+            if (pluginEditorComponents.size() > 1)
+            {
+                for (int i = 0; i < pluginEditorComponents.size(); ++i)
+                {
+                    if (pluginEditorComponents[i]->getNodeID() == nodeID)
+                    {
+                        if (i > 0)
+                        {
+                            auto prevNodeID = pluginEditorComponents[i - 1]->getNodeID();
+                            audioGraph.addConnection({{prevNodeID, 0}, {nodeID, 0}});
+                            audioGraph.addConnection({{prevNodeID, 1}, {nodeID, 1}});
+                        }
+                        if (i < pluginEditorComponents.size() - 1)
+                        {
+                            auto nextNodeID = pluginEditorComponents[i + 1]->getNodeID();
+                            audioGraph.addConnection({{nodeID, 0}, {nextNodeID, 0}});
+                            audioGraph.addConnection({{nodeID, 1}, {nextNodeID, 1}});
+                        }
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                // If it's the only plugin, connect input to this plugin and this plugin to output
+                audioGraph.addConnection({{inputNode->nodeID, 0}, {nodeID, 0}});
+                audioGraph.addConnection({{inputNode->nodeID, 1}, {nodeID, 1}});
+                audioGraph.addConnection({{nodeID, 0}, {outputNode->nodeID, 0}});
+                audioGraph.addConnection({{nodeID, 1}, {outputNode->nodeID, 1}});
+            }
+        }
+    }
+}
 
 // AudioAppComponent methods
 void MainComponent::prepareToPlay(int /*samplesPerBlockExpected*/, double /*sampleRate*/)
@@ -773,7 +821,8 @@ void MainComponent::loadPluginChain(const juce::File& file)
                             auto* editorComponent = new PluginEditorComponent(
                                 std::unique_ptr<juce::AudioProcessorEditor>(editor),
                                 [this, newNodeId] { removePluginFromGraph(newNodeId); },
-                                [this] { resized(); }
+                                [this] { resized(); },
+                                [this](juce::AudioProcessorGraph::NodeID id, bool bypass) { toggleBypassPlugin(id, bypass); } // Pass the callback
                             );
                             editorComponent->setNodeID(newNodeId);
                             pluginEditorComponents.add(editorComponent);

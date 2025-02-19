@@ -7,8 +7,8 @@
 class PluginEditorComponent : public juce::Component
 {
 public:
-    PluginEditorComponent(std::unique_ptr<juce::AudioProcessorEditor> editor, std::function<void()> onClose, std::function<void()> parentResized)
-        : editor(std::move(editor)), onClose(std::move(onClose)), parentResized(std::move(parentResized)), isFullscreen(false), isBypassed(false)
+    PluginEditorComponent(std::unique_ptr<juce::AudioProcessorEditor> editor, std::function<void()> onClose, std::function<void()> parentResized, std::function<void(juce::AudioProcessorGraph::NodeID, bool)> toggleBypassPlugin)
+        : editor(std::move(editor)), onClose(std::move(onClose)), parentResized(std::move(parentResized)), toggleBypassPlugin(std::move(toggleBypassPlugin)), isFullscreen(false), isBypassed(false)
     {
         jassert(this->editor != nullptr); // Ensure the editor is valid
 
@@ -79,6 +79,7 @@ private:
     juce::Component editorHolder; // Wrapper to hold the editor
     std::function<void()> onClose;
     std::function<void()> parentResized;
+    std::function<void(juce::AudioProcessorGraph::NodeID, bool)> toggleBypassPlugin;
     juce::DrawableButton deleteButton { "Delete", juce::DrawableButton::ButtonStyle::ImageFitted };
     juce::DrawableButton expandButton { "Expand", juce::DrawableButton::ButtonStyle::ImageFitted };
     juce::DrawableButton closeButton { "Close", juce::DrawableButton::ButtonStyle::ImageFitted };
@@ -215,6 +216,9 @@ private:
 
                 auto bypassSvg = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(isBypassed ? bypassButtonOnSvg() : bypassButtonOffSvg()));
                 bypassButton.setImages(bypassSvg.get());
+
+                // Call the toggleBypassPlugin callback
+                toggleBypassPlugin(nodeID, isBypassed);
             }
             else
             {
