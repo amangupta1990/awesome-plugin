@@ -603,41 +603,97 @@ void MainComponent::toggleBypassPlugin(juce::AudioProcessorGraph::NodeID nodeID,
                     audioGraph.removeConnection(connection);
                 }
             }
+
+            // Connect the previous node to the next node
+            for (int i = 0; i < pluginEditorComponents.size(); ++i)
+            {
+                if (pluginEditorComponents[i]->getNodeID() == nodeID)
+                {
+                    if (i > 0 && i < pluginEditorComponents.size() - 1)
+                    {
+                        auto prevNodeID = pluginEditorComponents[i - 1]->getNodeID();
+                        auto nextNodeID = pluginEditorComponents[i + 1]->getNodeID();
+                        audioGraph.addConnection({{prevNodeID, 0}, {nextNodeID, 0}});
+                        audioGraph.addConnection({{prevNodeID, 1}, {nextNodeID, 1}});
+                        audioGraph.addConnection({{prevNodeID, 0}, {nextNodeID, 1}});
+                        audioGraph.addConnection({{prevNodeID, 1}, {nextNodeID, 0}});
+                    }
+                    else if (i == 0 && pluginEditorComponents.size() > 1)
+                    {
+                        auto nextNodeID = pluginEditorComponents[i + 1]->getNodeID();
+                        audioGraph.addConnection({{inputNode->nodeID, 0}, {nextNodeID, 0}});
+                        audioGraph.addConnection({{inputNode->nodeID, 1}, {nextNodeID, 1}});
+                        audioGraph.addConnection({{inputNode->nodeID, 0}, {nextNodeID, 1}});
+                        audioGraph.addConnection({{inputNode->nodeID, 1}, {nextNodeID, 0}});
+                    }
+                    else if (i == pluginEditorComponents.size() - 1 && pluginEditorComponents.size() > 1)
+                    {
+                        auto prevNodeID = pluginEditorComponents[i - 1]->getNodeID();
+                        audioGraph.addConnection({{prevNodeID, 0}, {outputNode->nodeID, 0}});
+                        audioGraph.addConnection({{prevNodeID, 1}, {outputNode->nodeID, 1}});
+                        audioGraph.addConnection({{prevNodeID, 0}, {outputNode->nodeID, 1}});
+                        audioGraph.addConnection({{prevNodeID, 1}, {outputNode->nodeID, 0}});
+                    }
+                    else
+                    {
+                        audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
+                        audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
+                        audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 1}});
+                        audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 0}});
+                    }
+                    break;
+                }
+            }
         }
         else
         {
             // Restore connections to and from the node
-            if (pluginEditorComponents.size() > 1)
+            for (int i = 0; i < pluginEditorComponents.size(); ++i)
             {
-                for (int i = 0; i < pluginEditorComponents.size(); ++i)
+                if (pluginEditorComponents[i]->getNodeID() == nodeID)
                 {
-                    if (pluginEditorComponents[i]->getNodeID() == nodeID)
+                    if (i > 0)
                     {
-                        if (i > 0)
-                        {
-                            auto prevNodeID = pluginEditorComponents[i - 1]->getNodeID();
-                            audioGraph.addConnection({{prevNodeID, 0}, {nodeID, 0}});
-                            audioGraph.addConnection({{prevNodeID, 1}, {nodeID, 1}});
-                        }
-                        if (i < pluginEditorComponents.size() - 1)
-                        {
-                            auto nextNodeID = pluginEditorComponents[i + 1]->getNodeID();
-                            audioGraph.addConnection({{nodeID, 0}, {nextNodeID, 0}});
-                            audioGraph.addConnection({{nodeID, 1}, {nextNodeID, 1}});
-                        }
-                        break;
+                        auto prevNodeID = pluginEditorComponents[i - 1]->getNodeID();
+                        audioGraph.addConnection({{prevNodeID, 0}, {nodeID, 0}});
+                        audioGraph.addConnection({{prevNodeID, 1}, {nodeID, 1}});
+                        audioGraph.addConnection({{prevNodeID, 0}, {nodeID, 1}});
+                        audioGraph.addConnection({{prevNodeID, 1}, {nodeID, 0}});
                     }
+                    else
+                    {
+                        audioGraph.addConnection({{inputNode->nodeID, 0}, {nodeID, 0}});
+                        audioGraph.addConnection({{inputNode->nodeID, 1}, {nodeID, 1}});
+                        audioGraph.addConnection({{inputNode->nodeID, 0}, {nodeID, 1}});
+                        audioGraph.addConnection({{inputNode->nodeID, 1}, {nodeID, 0}});
+                    }
+
+                    if (i < pluginEditorComponents.size() - 1)
+                    {
+                        auto nextNodeID = pluginEditorComponents[i + 1]->getNodeID();
+                        audioGraph.addConnection({{nodeID, 0}, {nextNodeID, 0}});
+                        audioGraph.addConnection({{nodeID, 1}, {nextNodeID, 1}});
+                        audioGraph.addConnection({{nodeID, 0}, {nextNodeID, 1}});
+                        audioGraph.addConnection({{nodeID, 1}, {nextNodeID, 0}});
+                    }
+                    else
+                    {
+                        audioGraph.addConnection({{nodeID, 0}, {outputNode->nodeID, 0}});
+                        audioGraph.addConnection({{nodeID, 1}, {outputNode->nodeID, 1}});
+                        audioGraph.addConnection({{nodeID, 0}, {outputNode->nodeID, 1}});
+                        audioGraph.addConnection({{nodeID, 1}, {outputNode->nodeID, 0}});
+                    }
+                    break;
                 }
             }
-            else
-            {
-                // If it's the only plugin, connect input to this plugin and this plugin to output
-                audioGraph.addConnection({{inputNode->nodeID, 0}, {nodeID, 0}});
-                audioGraph.addConnection({{inputNode->nodeID, 1}, {nodeID, 1}});
-                audioGraph.addConnection({{nodeID, 0}, {outputNode->nodeID, 0}});
-                audioGraph.addConnection({{nodeID, 1}, {outputNode->nodeID, 1}});
-            }
         }
+    }
+
+    // Ensure the input is always connected to the output if no plugins are present
+    if (pluginEditorComponents.isEmpty())
+    {
+        audioGraph.addConnection({{inputNode->nodeID, 0}, {outputNode->nodeID, 0}});
+        audioGraph.addConnection({{inputNode->nodeID, 1}, {outputNode->nodeID, 1}});
     }
 }
 
