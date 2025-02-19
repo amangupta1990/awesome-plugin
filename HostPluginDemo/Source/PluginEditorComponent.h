@@ -115,11 +115,12 @@ private:
             int editorWidth = editor->getWidth();
             int editorHeight = editor->getHeight();
 
-            int newWidth = juce::jmin(editorWidth / 1.5, 400 / 1.5);
-            int newHeight = juce::jmin(editorHeight / 1.5, 300 / 1.5);
-
-            int centerX = (parentWidth - newWidth) / 2;
-            int centerY = (parentHeight - newHeight - 70) / 2;
+                       // Increase the editor dimensions by 1/3
+                       int newWidth = juce::jmin(editorWidth * 4 / 3, 400 * 4 / 3);
+                       int newHeight = juce::jmin(editorHeight * 4 / 3, 300 * 4 / 3);
+           
+                       int centerX = (parentWidth - newWidth) / 2;
+                       int centerY = (parentHeight - newHeight - 70) / 2;
 
             setBounds(centerX, centerY, newWidth, newHeight + 70);
             editorHolder.setBounds(0, 50, newWidth, newHeight);
